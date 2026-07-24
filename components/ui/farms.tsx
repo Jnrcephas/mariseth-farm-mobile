@@ -62,9 +62,7 @@ const Farms = () => {
         renderItem={({ item }: any) => <FarmCard item={item} />}
         type={"farms"}
         emptyVariant="inline"
-        contentContainerStyle={
-          hasFarms ? undefined : { minHeight: 220, flexGrow: 1 }
-        }
+        style={hasFarms ? undefined : { minHeight: 220, flexGrow: 1 }}
       />
 
       {recentlyAddedFarms.length > 0 ? (

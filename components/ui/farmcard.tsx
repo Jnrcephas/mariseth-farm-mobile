@@ -150,6 +150,6 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   newBadgeText: {
-    color: "#14803D",
+    color: colors.newBadgeText,
   },
 });

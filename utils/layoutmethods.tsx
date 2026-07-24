@@ -120,6 +120,14 @@ export function changePinHeaderHandler() {
   return formScreenHeaderHandler("Change Pin");
 }
 
+export function walletHeaderHandler() {
+  return formScreenHeaderHandler("Wallet");
+}
+
+export function marketPricesHeaderHandler() {
+  return formScreenHeaderHandler("Market Prices");
+}
+
 export function tabScreenOptions(
   tabLabel: string,
   roleOptions?: {

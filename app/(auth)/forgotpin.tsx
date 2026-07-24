@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 48,
     fontSize: 17,
-    color: "#101828",
+    color: colors.textBold,
     paddingVertical: 12,
     paddingHorizontal: 0,
   },

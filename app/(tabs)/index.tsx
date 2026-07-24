@@ -104,12 +104,9 @@ const Index = () => {
               isSmallholder && styles.quickActionsContainerSingle,
             ]}
           >
-            <QuickActionButton
-              type="credit"
-              flex={isSmallholder ? undefined : 1}
-              width={isSmallholder ? "100%" : undefined}
-            />
-            {isLeaderFarmer ? <QuickActionButton type="farmer" /> : null}
+            <QuickActionButton type="credit" width="47%" />
+            {isLeaderFarmer ? <QuickActionButton type="farmer" width="47%" /> : null}
+            <QuickActionButton type="market" width="47%" />
           </View>
         </View>
       </View>
@@ -207,11 +204,12 @@ const styles = StyleSheet.create({
   },
   quickActionsContainer: {
     flexDirection: "row",
+    flexWrap: "wrap",
     width: "100%",
-    gap: 18,
+    gap: 12,
   },
   quickActionsContainerSingle: {
-    gap: 0,
+    gap: 12,
   },
   recentlyAddedSection: {
     paddingHorizontal: 16,

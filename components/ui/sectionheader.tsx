@@ -121,6 +121,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.buttonActionSheet,
   },
   linkText: {
-    color: "#2563EB",
+    color: colors.partialText,
   },
 });

@@ -4,6 +4,8 @@ import {
   useInfiniteQuery,
   useQuery,
   UseQueryOptions,
+  UseInfiniteQueryOptions,
+  InfiniteData,
 } from "@tanstack/react-query";
 import { ApiResponse } from "apisauce";
 import React from "react";
@@ -11,7 +13,7 @@ const API_KEY = process.env.EXPO_PUBLIC_WEATHER_API_KEY;
 function useFetchQuery(
   endpoint: string,
   key: string,
-  options?: UseQueryOptions<any>
+  options?: Omit<UseQueryOptions<any, any, any, any>, "queryKey" | "queryFn">
 ): any {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: [key],
@@ -53,9 +55,24 @@ function usePaginatedInfiniteQuery<T>(
   key: string,
   params: object = {},
 
-  options?: UseQueryOptions
+  options?: Omit<
+    UseInfiniteQueryOptions<
+      PaginatedResponse<T>,
+      Error,
+      InfiniteData<PaginatedResponse<T>>,
+      readonly unknown[],
+      unknown
+    >,
+    "queryKey" | "queryFn" | "getNextPageParam" | "initialPageParam"
+  >
 ) {
-  const query = useInfiniteQuery<PaginatedResponse<T>>({
+  const query = useInfiniteQuery<
+    PaginatedResponse<T>,
+    Error,
+    InfiniteData<PaginatedResponse<T>>,
+    readonly unknown[],
+    unknown
+  >({
     queryKey: [key, params],
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
@@ -130,9 +147,21 @@ interface CurrentWeatherResponse {
   current: CurrentWeather;
   forecast?: {
     forecastday: Array<{
+      date: string;
       day: {
+        maxtemp_c: number;
+        mintemp_c: number;
+        condition: WeatherCondition;
         daily_chance_of_rain: number;
       };
+    }>;
+  };
+  alerts?: {
+    alert: Array<{
+      headline: string;
+      severity: string;
+      event: string;
+      desc: string;
     }>;
   };
 }
@@ -146,7 +175,7 @@ function useCurrentWeather(
   location: string,
   options?: UseQueryOptions<CurrentWeatherResponse, ApiError>
 ) {
-  const url = `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${location}&days=1&aqi=no`;
+  const url = `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${location}&days=3&aqi=no&alerts=yes`;
 
   const { data, isLoading, error } = useQuery<CurrentWeatherResponse, ApiError>(
     {

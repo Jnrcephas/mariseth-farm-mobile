@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.backgroundPrimary,
-    paddingHorizontal: 15,
+    paddingHorizontal: 16,
     paddingBottom: 15,
   },
   header: {

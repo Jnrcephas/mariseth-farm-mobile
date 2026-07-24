@@ -98,9 +98,7 @@ const SmallFarmers: React.FC<smallFarmersProps> = ({
         )}
         type={"farmers"}
         emptyVariant="inline"
-        contentContainerStyle={
-          hasFarmers ? undefined : { minHeight: 220, flexGrow: 1 }
-        }
+        style={hasFarmers ? undefined : { minHeight: 220, flexGrow: 1 }}
       />
     </View>
   );

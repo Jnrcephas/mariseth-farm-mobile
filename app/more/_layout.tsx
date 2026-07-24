@@ -2,6 +2,7 @@ import {
   changePinHeaderHandler,
   editLeadershipHeaderHandler,
   editProfileHeaderHandler,
+  walletHeaderHandler,
 } from "@/utils/layoutmethods";
 import { Stack } from "expo-router";
 import React from "react";
@@ -26,6 +27,7 @@ export default function MoreLayout() {
         name="helpsupport"
         options={{ headerShown: false }}
       />
+      <Stack.Screen name="wallet" options={walletHeaderHandler()} />
     </Stack>
   );
 }

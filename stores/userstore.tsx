@@ -1,5 +1,5 @@
 import { inputCredit } from "@/types/credit";
-import { farmProduct } from "@/types/farm";
+import { productCatalogItem } from "@/types/farm";
 import { metrics, region, user } from "@/types/user";
 import { MMKV } from "react-native-mmkv";
 import { create } from "zustand";
@@ -21,7 +21,7 @@ export interface userStoreProps {
   fcmToken: string;
   metrics: metrics;
   regions: region[];
-  farmProducts: farmProduct[];
+  farmProducts: productCatalogItem[];
   farms: any[];
   inputCredits: inputCredit[];
 }

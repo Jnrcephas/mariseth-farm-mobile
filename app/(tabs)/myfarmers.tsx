@@ -3,6 +3,7 @@ import ErrorComponent from "@/components/ui/errorcomponent";
 import FarmerCard from "@/components/ui/farmercard";
 import Farms from "@/components/ui/farms";
 import FloatingButton from "@/components/ui/floatingbutton";
+import RequestManagement from "@/components/ui/requestmanagement";
 import { SegmentedScrollView } from "@/components/ui/segmentedview";
 import MyFarmersSP from "@/components/ui/skeletonplaceholders/myfarmers";
 import SmallFarmerCard from "@/components/ui/smallfarmercard";
@@ -24,7 +25,9 @@ const MyFarmers = () => {
   const setSegmentedOption = useUniversalStore(
     (state) => state.setSegmentedOption
   );
-  const options = {
+  const options: Partial<
+    Record<"Farmers" | "Farms", { icon: keyof typeof icons; action: () => void }>
+  > = {
     Farmers: {
       icon: icons.userAdd,
       action: () => {
@@ -87,7 +90,7 @@ const MyFarmers = () => {
 
         <SegmentedScrollView
           storeKey="myFarmers"
-          options={["Farmers", "Farms"]}
+          options={["Farmers", "Farms", "Requests"]}
         >
           <SmallFarmers
             data={items}
@@ -98,6 +101,7 @@ const MyFarmers = () => {
             isRefetching={isRefetching}
           />
           <Farms />
+          <RequestManagement />
         </SegmentedScrollView>
 
         {recentlyAddedFarmers.length > 0 ? (
@@ -115,10 +119,12 @@ const MyFarmers = () => {
         ) : null}
       </ScrollView>
 
-      <FloatingButton
-        icon={options[selectedOption]?.icon}
-        onPress={options[selectedOption]?.action}
-      />
+      {options[selectedOption as "Farmers" | "Farms"] ? (
+        <FloatingButton
+          icon={options[selectedOption as "Farmers" | "Farms"]!.icon}
+          onPress={options[selectedOption as "Farmers" | "Farms"]!.action}
+        />
+      ) : null}
     </>
   );
 };

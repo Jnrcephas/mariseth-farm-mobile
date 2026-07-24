@@ -57,6 +57,7 @@ export const colors = {
   overdueBg: "#FEF2F2",
   activeText: "#D97706",
   activeBg: "#FFFBEB",
+  newBadgeText: "#14803D",
 
   // Tab Bar
   tabBarActive: "#4A8D34",

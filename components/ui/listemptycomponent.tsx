@@ -10,7 +10,7 @@ const ListEmptyComponent = ({
   btnTitle,
   onPress,
 }: {
-  type: "farmers" | "crops" | "farms" | "credits" | "new_farmer" | "notifications";
+  type: "farmers" | "crops" | "farms" | "credits" | "new_farmer" | "notifications" | "requests";
   variant?: "default" | "inline";
   btnTitle?: string;
   onPress?: () => void;
@@ -56,6 +56,13 @@ const ListEmptyComponent = ({
       title: "No notifications yet",
       subtitle:
         "You're all caught up. New alerts about credits, farms, and requests will appear here.",
+      btnTitle: "",
+      btnAction: null,
+    },
+    requests: {
+      title: "No pending requests",
+      subtitle:
+        "Input and support requests submitted by farmers in your cluster will show up here for you to review.",
       btnTitle: "",
       btnAction: null,
     },

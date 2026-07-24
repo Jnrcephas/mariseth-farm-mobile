@@ -83,7 +83,15 @@ export interface user {
   user_type: string;
 }
 
-export interface farmProduct {
+// NOTE: previously this interface was also named `farmProduct`, which merged
+// (via TS interface-declaration merging) with the real `farmProduct` above
+// and silently required every farm product to satisfy both shapes at once -
+// impossible, since nothing in the app actually returns data matching this
+// shape (components/ui/farmproduct.tsx reads product.product.name, matching
+// the interface above, not this one). Renamed since this looks like it was
+// meant for a separate "product catalog" concept - wire it up properly if/when
+// that's built, but for now it isn't used anywhere.
+export interface productCatalogItem {
   id: number;
   name: string;
   description: string | null;

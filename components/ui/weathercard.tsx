@@ -117,6 +117,10 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
       : weatherGradient;
   const chanceOfRain =
     data?.forecast?.forecastday?.[0]?.day?.daily_chance_of_rain ?? "--";
+  const forecastDays = data?.forecast?.forecastday ?? [];
+  const severeAlert = data?.alerts?.alert?.[0];
+  const showForecastRow = variant === "home" && forecastDays.length > 0;
+  const showAlertBanner = variant === "home" && !!severeAlert;
 
   return (
     <LinearGradient
@@ -252,6 +256,44 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
           />
         </View>
       </View>
+
+      {showAlertBanner ? (
+        <View style={styles.alertBanner}>
+          <AppText fontFamily="SemiBold" fontSize={13} color="white">
+            ⚠ {severeAlert?.event || "Severe Weather Alert"}
+          </AppText>
+          <AppText
+            fontFamily="Regular"
+            fontSize={12}
+            color="white"
+            numberOfLines={2}
+            style={{ marginTop: 2 }}
+          >
+            {severeAlert?.headline}
+          </AppText>
+        </View>
+      ) : null}
+
+      {showForecastRow ? (
+        <View style={styles.forecastRow}>
+          {forecastDays.map((day) => {
+            const { icon: dayIcon } = getWeatherAssets(
+              day?.day?.condition?.text ?? ""
+            );
+            return (
+              <View key={day.date} style={styles.forecastDay}>
+                <AppText fontFamily="Medium" fontSize={12} color="white">
+                  {format(new Date(day.date), "EEE")}
+                </AppText>
+                <Image source={dayIcon} style={styles.forecastIcon} />
+                <AppText fontFamily="SemiBold" fontSize={13} color="white">
+                  {Math.round(day?.day?.maxtemp_c)}° / {Math.round(day?.day?.mintemp_c)}°
+                </AppText>
+              </View>
+            );
+          })}
+        </View>
+      ) : null}
     </LinearGradient>
   );
 };
@@ -362,5 +404,29 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 344,
     borderRadius: 16,
+  },
+  alertBanner: {
+    marginTop: 16,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: "rgba(220, 38, 38, 0.35)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.4)",
+  },
+  forecastRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.3)",
+  },
+  forecastDay: {
+    alignItems: "center",
+    gap: 4,
+  },
+  forecastIcon: {
+    width: 28,
+    height: 28,
   },
 });

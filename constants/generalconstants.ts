@@ -94,6 +94,11 @@ export const moreLinks: Array<moreLink> = [
     route: "/more/profileinformation",
   },
   {
+    name: "Wallet",
+    icon: icons.money,
+    route: "/more/wallet",
+  },
+  {
     name: "Change Pin",
     icon: icons.password,
     route: "/more/changepin",

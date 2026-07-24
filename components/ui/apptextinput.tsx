@@ -14,7 +14,7 @@ import { icons } from "@/constants/icons";
 import { Image } from "expo-image";
 import AppText from "./apptext";
 
-interface AppTextInputProps extends TextInputProps {
+interface AppTextInputProps extends Omit<TextInputProps, "style"> {
   Inputstyle?: TextInputProps["style"];
   style?: View["props"]["style"];
   marginLeft?: number;
@@ -28,7 +28,7 @@ interface AppTextInputProps extends TextInputProps {
   leftComponent?: React.ReactNode;
 }
 
-const ANDROID_INPUT_COLOR = "#101828";
+const ANDROID_INPUT_COLOR = colors.textBold;
 
 const AppTextInput: React.FC<AppTextInputProps> = ({
   Inputstyle,

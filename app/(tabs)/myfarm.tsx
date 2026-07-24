@@ -3,6 +3,7 @@ import ErrorComponent from "@/components/ui/errorcomponent";
 import FarmDetails from "@/components/ui/farmdetails";
 import FarmProducts from "@/components/ui/farmproducts";
 import { SegmentedScrollView } from "@/components/ui/segmentedview";
+import SoilAirQuality from "@/components/ui/soilairquality";
 import SmallFarmerCard from "@/components/ui/smallfarmercard";
 import MyFarmSP from "@/components/ui/skeletonplaceholders/myfarm";
 import WeatherCard from "@/components/ui/weathercard";
@@ -104,10 +105,11 @@ const MyFarm = () => {
 
       <SegmentedScrollView
         storeKey="myFarm"
-        options={["Farm Details", "Farm Products"]}
+        options={["Farm Details", "Farm Products", "Soil & Air Quality"]}
       >
         <FarmDetails item={data} />
         <FarmProducts products={data} />
+        <SoilAirQuality />
       </SegmentedScrollView>
 
       {recentlyAddedFarmers.length > 0 ? (

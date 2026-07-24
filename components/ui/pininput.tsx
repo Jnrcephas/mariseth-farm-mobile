@@ -49,7 +49,7 @@ const PinInput: React.FC<PinInputProps> = ({
           autoComplete="off"
           underlineColorAndroid="transparent"
           selectionColor={colors.primary}
-          cursorColor="#101828"
+          cursorColor={colors.textBold}
         />
       </View>
     </View>
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   textInput: {
     minHeight: 48,
     fontSize: 17,
-    color: "#101828",
+    color: colors.textBold,
     paddingVertical: 12,
     paddingHorizontal: 0,
     includeFontPadding: false,

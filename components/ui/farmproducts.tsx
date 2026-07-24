@@ -33,7 +33,7 @@ const FarmProducts: React.FC<farmProductsProps> = ({ products }) => {
     );
   }
 
-  const crops = products?.crops ?? [];
+  const crops = products?.products ?? [];
   const livestock = products?.livestock ?? [];
 
   return (

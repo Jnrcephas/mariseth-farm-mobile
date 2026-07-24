@@ -6,7 +6,7 @@ import React from "react";
 import { Pressable, StyleSheet } from "react-native";
 import AppText from "./apptext";
 interface quickActionButtonProps {
-  type: "credit" | "farmer";
+  type: "credit" | "farmer" | "market";
   width?: any;
   flex?: number;
 }
@@ -28,6 +28,11 @@ const QuickActionButton: React.FC<quickActionButtonProps> = ({
       label: "Add New Farmer",
       icon: icons.userAdd,
       route: `/myfarmers/addfarmer?data=""`,
+    },
+    market: {
+      label: "Market Prices",
+      icon: icons.bill,
+      route: "/home/marketprices",
     },
   };
   return (
