@@ -46,4 +46,8 @@ export const endpoints = {
 
   // REGIONS
   regions: `regions`,
+
+  // WEATHER - farms need a `boundary` set (see myfarmers/addfarm.tsx and
+  // myfarm/editfarmdetails.tsx) before this returns anything for them.
+  weather: (farmId: number | string) => `weather/${farmId}`,
 };

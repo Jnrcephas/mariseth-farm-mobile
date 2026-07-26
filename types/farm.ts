@@ -28,6 +28,11 @@ export interface livestockKept {
   product: product;
   is_main_product: boolean;
 }
+export interface farmBoundary {
+  type: "Polygon";
+  coordinates: [number, number][][];
+}
+
 export interface myFarm {
   id: number;
   farm_id: string;
@@ -38,6 +43,9 @@ export interface myFarm {
   region: region;
   district: district;
   size: number;
+  // Farms need this set before the weather endpoint (GET
+  // /api/v1/weather/{farm_id}) will return anything for them.
+  boundary?: farmBoundary | null;
   size_metric: {
     category_name: string;
     category_type: string;
@@ -184,4 +192,5 @@ export type myFarm1 = {
   crops: crop[];
   livestock: livestock[];
   farmer: farmer;
+  boundary?: farmBoundary | null;
 };

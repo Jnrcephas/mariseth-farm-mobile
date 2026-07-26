@@ -7,26 +7,26 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0FE6E040315C8A0DF31F68D9 /* Pods_MarisethFarms.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DE16B2C8473D91E8F1323BB /* Pods_MarisethFarms.framework */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		2F444A4E4D86DA664173777F /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 1112DD70D63EDB2F4410BB42 /* PrivacyInfo.xcprivacy */; };
+		2B1DA67D68507B32A014CF8B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 4A72BD06B85A0AA5F84F03E4 /* PrivacyInfo.xcprivacy */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		768C54E410DFAED5574A0E2E /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB6491A6748AF871DC475605 /* ExpoModulesProvider.swift */; };
+		728E4EA9E8F4C6BED50574A7 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80BF7F591F43179C1AAAF848 /* ExpoModulesProvider.swift */; };
+		A0067623EC7559CBECEF5797 /* Pods_MarisethFarms.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 50DA79A415889AF20127F43D /* Pods_MarisethFarms.framework */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1112DD70D63EDB2F4410BB42 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = MarisethFarms/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* MarisethFarms.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MarisethFarms.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = MarisethFarms/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = MarisethFarms/Info.plist; sourceTree = "<group>"; };
-		8DE16B2C8473D91E8F1323BB /* Pods_MarisethFarms.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MarisethFarms.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		9A408C4922C5F6D38B7C83C6 /* Pods-MarisethFarms.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MarisethFarms.release.xcconfig"; path = "Target Support Files/Pods-MarisethFarms/Pods-MarisethFarms.release.xcconfig"; sourceTree = "<group>"; };
+		4A72BD06B85A0AA5F84F03E4 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = MarisethFarms/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		50DA79A415889AF20127F43D /* Pods_MarisethFarms.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MarisethFarms.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		6A4F388317B60FBE36C043B6 /* Pods-MarisethFarms.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MarisethFarms.release.xcconfig"; path = "Target Support Files/Pods-MarisethFarms/Pods-MarisethFarms.release.xcconfig"; sourceTree = "<group>"; };
+		80BF7F591F43179C1AAAF848 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-MarisethFarms/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = MarisethFarms/SplashScreen.storyboard; sourceTree = "<group>"; };
-		AB6491A6748AF871DC475605 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-MarisethFarms/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		B2E9BB54F0C63615B0272DE2 /* Pods-MarisethFarms.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MarisethFarms.debug.xcconfig"; path = "Target Support Files/Pods-MarisethFarms/Pods-MarisethFarms.debug.xcconfig"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		BE58ECA0036ABE4C5879E28D /* Pods-MarisethFarms.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MarisethFarms.debug.xcconfig"; path = "Target Support Files/Pods-MarisethFarms/Pods-MarisethFarms.debug.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = MarisethFarms/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* MarisethFarms-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "MarisethFarms-Bridging-Header.h"; path = "MarisethFarms/MarisethFarms-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -37,7 +37,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0FE6E040315C8A0DF31F68D9 /* Pods_MarisethFarms.framework in Frameworks */,
+				A0067623EC7559CBECEF5797 /* Pods_MarisethFarms.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,36 +53,18 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				1112DD70D63EDB2F4410BB42 /* PrivacyInfo.xcprivacy */,
+				4A72BD06B85A0AA5F84F03E4 /* PrivacyInfo.xcprivacy */,
 			);
 			name = MarisethFarms;
-			sourceTree = "<group>";
-		};
-		230110DE3DDFD24D3145AE2D /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				87484B46B89BC4BF02A512F4 /* MarisethFarms */,
-			);
-			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				8DE16B2C8473D91E8F1323BB /* Pods_MarisethFarms.framework */,
+				50DA79A415889AF20127F43D /* Pods_MarisethFarms.framework */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		7CE4232E63F07A8F8E7732F7 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				BE58ECA0036ABE4C5879E28D /* Pods-MarisethFarms.debug.xcconfig */,
-				9A408C4922C5F6D38B7C83C6 /* Pods-MarisethFarms.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -99,8 +81,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				7CE4232E63F07A8F8E7732F7 /* Pods */,
-				230110DE3DDFD24D3145AE2D /* ExpoModulesProviders */,
+				9177C0B6110765601AA15062 /* Pods */,
+				BFF62C7CF0CDBA1FD5358EB4 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -115,10 +97,20 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		87484B46B89BC4BF02A512F4 /* MarisethFarms */ = {
+		9177C0B6110765601AA15062 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				AB6491A6748AF871DC475605 /* ExpoModulesProvider.swift */,
+				B2E9BB54F0C63615B0272DE2 /* Pods-MarisethFarms.debug.xcconfig */,
+				6A4F388317B60FBE36C043B6 /* Pods-MarisethFarms.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		B33AD812200398229C6E53AA /* MarisethFarms */ = {
+			isa = PBXGroup;
+			children = (
+				80BF7F591F43179C1AAAF848 /* ExpoModulesProvider.swift */,
 			);
 			name = MarisethFarms;
 			sourceTree = "<group>";
@@ -132,6 +124,14 @@
 			path = MarisethFarms/Supporting;
 			sourceTree = "<group>";
 		};
+		BFF62C7CF0CDBA1FD5358EB4 /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				B33AD812200398229C6E53AA /* MarisethFarms */,
+			);
+			name = ExpoModulesProviders;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -140,13 +140,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "MarisethFarms" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				4B5AFC5A6DD0A1D50EF36DD2 /* [Expo] Configure project */,
+				B33765CC37B991C370BDF778 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				BD78B6C659380BD7BCDEA781 /* [CP] Embed Pods Frameworks */,
+				FD36D382E438B8FEA6EDFC09 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -196,7 +196,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				2F444A4E4D86DA664173777F /* PrivacyInfo.xcprivacy in Resources */,
+				2B1DA67D68507B32A014CF8B /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -240,25 +240,6 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		4B5AFC5A6DD0A1D50EF36DD2 /* [Expo] Configure project */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-MarisethFarms/expo-configure-project.sh\"\n";
-		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -295,7 +276,26 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MarisethFarms/Pods-MarisethFarms-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		BD78B6C659380BD7BCDEA781 /* [CP] Embed Pods Frameworks */ = {
+		B33765CC37B991C370BDF778 /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-MarisethFarms/expo-configure-project.sh\"\n";
+		};
+		FD36D382E438B8FEA6EDFC09 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -321,7 +321,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				768C54E410DFAED5574A0E2E /* ExpoModulesProvider.swift in Sources */,
+				728E4EA9E8F4C6BED50574A7 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -330,7 +330,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = BE58ECA0036ABE4C5879E28D /* Pods-MarisethFarms.debug.xcconfig */;
+			baseConfigurationReference = B2E9BB54F0C63615B0272DE2 /* Pods-MarisethFarms.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -342,7 +342,7 @@
 					"FB_SONARKIT_ENABLED=1",
 				);
 				INFOPLIST_FILE = MarisethFarms/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -366,14 +366,14 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9A408C4922C5F6D38B7C83C6 /* Pods-MarisethFarms.release.xcconfig */;
+			baseConfigurationReference = 6A4F388317B60FBE36C043B6 /* Pods-MarisethFarms.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = MarisethFarms/MarisethFarms.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				INFOPLIST_FILE = MarisethFarms/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

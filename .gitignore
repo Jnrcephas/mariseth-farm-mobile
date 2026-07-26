@@ -40,6 +40,7 @@ yarn-error.*
 # macOS
 .DS_Store
 *.pem
+ios/
 
 # local env files (redundant with above, kept for clarity/tooling that
 # looks for this exact pattern)

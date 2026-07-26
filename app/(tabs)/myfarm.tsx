@@ -71,9 +71,6 @@ const MyFarm = () => {
     .filter(Boolean)
     .join(" · ");
 
-  const weatherLocation =
-    data?.district?.name ?? user?.farmer?.village ?? "Accra";
-
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.backgroundPrimary }}
@@ -89,7 +86,7 @@ const MyFarm = () => {
         ]}
       >
         <View style={styles.weatherWrapper}>
-          <WeatherCard variant="farm" location={weatherLocation} />
+          <WeatherCard variant="farm" farmId={data?.id} />
           <View style={styles.farmTitleOverlay}>
             <AppText fontFamily="Bold" fontSize={20} color="white">
               {data?.name}

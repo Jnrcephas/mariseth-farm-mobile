@@ -1,4 +1,5 @@
 import apiClient from "@/network/apiclient";
+import { endpoints } from "@/constants/endpoints";
 import { getErrorMessage } from "@/utils/apierrorhandler";
 import {
   useInfiniteQuery,
@@ -9,7 +10,6 @@ import {
 } from "@tanstack/react-query";
 import { ApiResponse } from "apisauce";
 import React from "react";
-const API_KEY = process.env.EXPO_PUBLIC_WEATHER_API_KEY;
 function useFetchQuery(
   endpoint: string,
   key: string,
@@ -115,6 +115,21 @@ function usePaginatedInfiniteQuery<T>(
   };
 }
 
+// NOTE: previously this called WeatherAPI.com directly using the
+// farmer's registered village name as a free-text location. Now that the
+// backend has its own weather endpoint tied to a specific farm's
+// boundary (GET api/v1/weather/{farm_id} - see constants/endpoints.ts),
+// weather is fetched through the normal apiClient instead, keyed by farm
+// id rather than a location string. Farms without a boundary set will
+// get an error back - see isBoundaryMissingError below.
+//
+// ASSUMPTION: kept the exact same response shape WeatherCard already
+// depends on (location/current/forecast/alerts, WeatherAPI.com-style
+// field names like temp_c, condition.text, daily_chance_of_rain) on the
+// assumption the backend proxies/forwards a WeatherAPI.com-compatible
+// payload rather than reshaping it. If the real response differs, this
+// interface and WeatherCard's field access are the two places to update
+// - nothing else should need to change.
 interface WeatherCondition {
   text: string;
   icon: string;
@@ -142,7 +157,7 @@ interface WeatherLocation {
   localtime: string;
 }
 
-interface CurrentWeatherResponse {
+export interface FarmWeatherResponse {
   location: WeatherLocation;
   current: CurrentWeather;
   forecast?: {
@@ -169,40 +184,54 @@ interface CurrentWeatherResponse {
 interface ApiError {
   message: string;
   status?: number;
+  payload?: any;
 }
 
-function useCurrentWeather(
-  location: string,
-  options?: UseQueryOptions<CurrentWeatherResponse, ApiError>
-) {
-  const url = `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${location}&days=3&aqi=no&alerts=yes`;
-
-  const { data, isLoading, error } = useQuery<CurrentWeatherResponse, ApiError>(
-    {
-      queryKey: ["current-weather", location],
-      staleTime: 5 * 60 * 1000,
-      queryFn: async () => {
-        const response = await fetch(url, {
-          method: "GET",
-        });
-        if (!response.ok) {
-          const body = await response.text();
-
-          console.log(body);
-
-          throw {
-            message: getErrorMessage(response.status, body),
-            status: response.status,
-          };
-        }
-        return (await response.json()) as CurrentWeatherResponse;
-      },
-
-      ...options,
-    }
+// The backend returns an error (400/404, exact shape TBC with backend
+// team) when a farm has no boundary set yet - this heuristic flags that
+// case so the UI can show "set your farm boundary" instead of a generic
+// error. Tighten this once the exact error shape is confirmed.
+export function isBoundaryMissingError(error: any): boolean {
+  if (!error) return false;
+  const text = JSON.stringify(error).toLowerCase();
+  return (
+    (error?.status === 400 || error?.status === 404) &&
+    text.includes("boundary")
   );
+}
+
+function useFarmWeather(
+  farmId: number | string | undefined,
+  options?: Omit<UseQueryOptions<FarmWeatherResponse, ApiError>, "queryKey" | "queryFn" | "enabled">
+) {
+  const { data, isLoading, error } = useQuery<FarmWeatherResponse, ApiError>({
+    queryKey: ["farm-weather", farmId],
+    enabled: !!farmId,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const response: ApiResponse<FarmWeatherResponse> = await apiClient.get(
+        endpoints.weather(farmId as number | string)
+      );
+
+      if (response.ok && response.data) {
+        return response.data;
+      }
+
+      throw {
+        message: getErrorMessage(
+          response.status ?? 0,
+          typeof response.data === "string"
+            ? response.data
+            : JSON.stringify(response.data ?? {})
+        ),
+        status: response.status,
+        payload: response.data,
+      };
+    },
+    ...options,
+  });
 
   return { data, isLoading, error };
 }
 
-export { useCurrentWeather, useFetchQuery, usePaginatedInfiniteQuery };
+export { useFarmWeather, useFetchQuery, usePaginatedInfiniteQuery };

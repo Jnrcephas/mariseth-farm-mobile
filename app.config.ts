@@ -4,16 +4,15 @@ const appVariant = process.env.EXPO_PUBLIC_APP_ENV || "production";
 
 // console.log("APP VARIANT", appVariant);
 
-const appConfig: Record<
-  string,
-  {
-    name: string;
-    bundleIdAndroid: string;
-    bundleIdIOS: string;
-    slug: string;
-    scheme: string;
-  }
-> = {
+interface AppVariantConfig {
+  name: string;
+  bundleIdAndroid: string;
+  bundleIdIOS: string;
+  slug: string;
+  scheme: string;
+}
+
+const appConfig: Record<string, AppVariantConfig> = {
   development: {
     name: "Mariseth (Staging)",
     bundleIdAndroid: `com.marisethfarms.android.stage`,
@@ -93,6 +92,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         },
         ios: {
           useFrameworks: "static",
+          deploymentTarget: "16.0",
         },
       },
     ],

@@ -1,12 +1,14 @@
 import { colors } from "@/constants/colors";
 import { largeScreen, weatherBackgrounds } from "@/constants/generalconstants";
 import { icons } from "@/constants/icons";
-import { useCurrentWeather } from "@/hooks/usefetchquery";
+import { endpoints } from "@/constants/endpoints";
+import { isBoundaryMissingError, useFarmWeather, useFetchQuery } from "@/hooks/usefetchquery";
 import { userStore } from "@/stores/userstore";
 import { getWeatherAssets } from "@/utils/commonmethods";
 import { format } from "date-fns";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import AppText from "./apptext";
@@ -50,21 +52,29 @@ const WeatherCondition: React.FC<weatherCondition> = ({
 };
 interface WeatherCardProps {
   variant?: "default" | "hero" | "farm" | "home";
-  location?: string;
+  farmId?: number | string;
 }
 
 const WeatherCard: React.FC<WeatherCardProps> = ({
   variant = "default",
-  location: locationOverride,
+  farmId: farmIdOverride,
 }) => {
   const weatherIconSize = largeScreen ? 133 : 113;
   const { user } = userStore.getState();
-  const weatherLocation =
-    locationOverride ?? user?.farmer?.village ?? "Accra";
 
-  const { data, isLoading, error } = useCurrentWeather(weatherLocation);
+  // Home tab doesn't have a farm in scope already, so fetch the user's
+  // own farm here just to get its id. myfarm.tsx (variant="farm") already
+  // has the farm loaded and passes farmId directly, so this is skipped
+  // there via `enabled`.
+  const { data: ownFarm } = useFetchQuery(endpoints.myFarm, "myFarm", {
+    enabled: !farmIdOverride,
+  });
+  const farmId = farmIdOverride ?? ownFarm?.id;
+
+  const { data, isLoading, error } = useFarmWeather(farmId);
+  const boundaryMissing = isBoundaryMissingError(error);
   const showWeatherFallback =
-    (variant === "default" || variant === "home") && !!error;
+    (variant === "default" || variant === "home") && !!error && !boundaryMissing;
   const showToolbar =
     variant === "hero" || variant === "farm" || variant === "home";
 
@@ -76,6 +86,41 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
           { backgroundColor: colors.skeletonPlaceholder },
         ]}
       />
+    );
+  }
+
+  if (boundaryMissing) {
+    return (
+      <Pressable
+        onPress={() => router.navigate("/myfarm/editfarmdetails")}
+        style={[
+          styles.weatherSkeletonPlaceholder,
+          {
+            backgroundColor: colors.skeletonPlaceholder,
+            justifyContent: "center",
+            alignItems: "center",
+            paddingHorizontal: 24,
+          },
+        ]}
+      >
+        <Image source={icons.location} style={{ height: 28, width: 28, marginBottom: 8 }} />
+        <AppText
+          fontFamily="SemiBold"
+          fontSize={14}
+          color="textPrimary"
+          style={{ textAlign: "center" }}
+        >
+          Set your farm&apos;s boundary to see weather
+        </AppText>
+        <AppText
+          fontFamily="Regular"
+          fontSize={12}
+          color="formPlaceholderText"
+          style={{ textAlign: "center", marginTop: 4 }}
+        >
+          Tap here to mark it on the map
+        </AppText>
+      </Pressable>
     );
   }
 
@@ -98,7 +143,7 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
     );
   }
 
-  const locationName = data?.location?.name ?? weatherLocation;
+  const locationName = data?.location?.name ?? user?.farmer?.village ?? "Your Farm";
   const temperature = data?.current?.temp_c ?? "--";
   const conditionText = data?.current?.condition?.text ?? "Sunny";
   const windKph = data?.current?.wind_kph ?? "--";

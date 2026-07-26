@@ -18,6 +18,7 @@ import RegionSelector from "./regionselector";
 import Select from "./select";
 import SelectModal from "./selectmodal";
 import SmallFarmerCard from "./smallfarmercard";
+import FarmBoundaryCapture, { BoundaryPoint } from "./farmboundarycapture";
 
 interface farmFormProps {
   formik: FormikProps<any>;
@@ -297,6 +298,18 @@ const FarmForm: React.FC<farmFormProps> = ({
             error={
               (formik.touched.has_access_to_market &&
                 formik.errors.has_access_to_market) as string
+            }
+          />
+        </View>
+
+        <View style={styles.formSection}>
+          <AppText fontFamily="SemiBold" fontSize={16} color="black" style={{ marginBottom: 12 }}>
+            Farm Boundary
+          </AppText>
+          <FarmBoundaryCapture
+            points={formik.values.boundary ?? []}
+            onChange={(points: BoundaryPoint[]) =>
+              formik.setFieldValue("boundary", points)
             }
           />
         </View>

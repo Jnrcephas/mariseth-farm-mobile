@@ -1,4 +1,5 @@
 import FarmForm from "@/components/ui/farmform";
+import { pointsToGeoJSON } from "@/components/ui/farmboundarycapture";
 import { endpoints } from "@/constants/endpoints";
 import { usePaginatedInfiniteQuery } from "@/hooks/usefetchquery";
 import useAuthMutation from "@/hooks/usemutation";
@@ -80,10 +81,19 @@ const AddFarm = () => {
       farming_methods: [],
       irrigation: false,
       has_access_to_market: false,
+      boundary: [] as { latitude: number; longitude: number }[],
     },
     validationSchema: addFarmSchema,
     onSubmit: async (values) => {
-      mutate(values);
+      const boundary = pointsToGeoJSON(values.boundary);
+      if (!boundary) {
+        handleToastShow(
+          toast,
+          "Mark at least 3 points on the boundary before submitting. Without it, this farm won't receive weather data."
+        );
+        return;
+      }
+      mutate({ ...values, boundary });
     },
   });
 
