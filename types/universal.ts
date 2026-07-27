@@ -1,5 +1,5 @@
 export type SegmentedControlState = {
-  myFarm: "Farm Details" | "Farm Products" | "Soil & Air Quality";
+  myFarm: "Farm Details" | "Farm Products" | "Soil & Air Quality" | "Geofencing";
   myFarmers: "Farmers" | "Farms" | "Requests";
   myFarmerDetails: "Personal" | "Farm";
 };

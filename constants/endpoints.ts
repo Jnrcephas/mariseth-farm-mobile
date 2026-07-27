@@ -51,3 +51,7 @@ export const endpoints = {
   // myfarm/editfarmdetails.tsx) before this returns anything for them.
   weather: (farmId: number | string) => `weather/${farmId}`,
 };
+
+
+
+

@@ -2,7 +2,11 @@ import AppText from "@/components/ui/apptext";
 import ErrorComponent from "@/components/ui/errorcomponent";
 import FarmDetails from "@/components/ui/farmdetails";
 import FarmProducts from "@/components/ui/farmproducts";
-import { SegmentedScrollView } from "@/components/ui/segmentedview";
+import Geofencing from "@/components/ui/geofencing";
+import {
+  SegmentedContentPages,
+  SegmentedTabBar,
+} from "@/components/ui/segmentedview";
 import SoilAirQuality from "@/components/ui/soilairquality";
 import SmallFarmerCard from "@/components/ui/smallfarmercard";
 import MyFarmSP from "@/components/ui/skeletonplaceholders/myfarm";
@@ -12,10 +16,22 @@ import { endpoints } from "@/constants/endpoints";
 import { isIOS } from "@/constants/generalconstants";
 import { useFetchQuery, usePaginatedInfiniteQuery } from "@/hooks/usefetchquery";
 import { userStore } from "@/stores/userstore";
+import { SegmentedControlValue } from "@/types/universal";
 import { isLeadFarmerUser, isSmallholderUser } from "@/utils/userroles";
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useStore } from "zustand";
+
+const TAB_OPTIONS: SegmentedControlValue<"myFarm">[] = [
+  "Farm Details",
+  "Farm Products",
+  "Soil & Air Quality",
+  "Geofencing",
+];
+
+const TAB_LABELS: Record<string, string> = {
+  "Soil & Air Quality": "Soil & Air",
+};
 
 const MyFarm = () => {
   const user = useStore(userStore, (state) => state.user);
@@ -79,6 +95,13 @@ const MyFarm = () => {
         { paddingBottom: isIOS ? "30%" : "20%" },
       ]}
     >
+      <SegmentedTabBar
+        storeKey="myFarm"
+        options={TAB_OPTIONS}
+        labelOverrides={TAB_LABELS}
+        style={styles.tabBarWrapper}
+      />
+
       <View
         style={[
           styles.heroSection,
@@ -100,14 +123,12 @@ const MyFarm = () => {
         </View>
       </View>
 
-      <SegmentedScrollView
-        storeKey="myFarm"
-        options={["Farm Details", "Farm Products", "Soil & Air Quality"]}
-      >
+      <SegmentedContentPages storeKey="myFarm" options={TAB_OPTIONS}>
         <FarmDetails item={data} />
         <FarmProducts products={data} />
         <SoilAirQuality />
-      </SegmentedScrollView>
+        <Geofencing farm={data} />
+      </SegmentedContentPages>
 
       {recentlyAddedFarmers.length > 0 ? (
         <View style={styles.recentlyAddedSection}>
@@ -132,9 +153,11 @@ const styles = StyleSheet.create({
     gap: 32,
     paddingTop: 4,
   },
+  tabBarWrapper: {
+    marginTop: 16,
+  },
   heroSection: {
     paddingHorizontal: 16,
-    marginTop: 32,
   },
   heroSectionSmallholder: {
     marginTop: 0,

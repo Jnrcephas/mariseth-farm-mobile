@@ -41,3 +41,5 @@ export const useSegmentedScroll = <K extends SegmentedControlKey>(
     setSegmentedOption,
   };
 };
+
+

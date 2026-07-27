@@ -131,3 +131,5 @@ const FarmDetails: React.FC<farmDetailsProps> = React.memo(({ item }) => {
 export default FarmDetails;
 
 const styles = StyleSheet.create({});
+
+
