@@ -2,13 +2,13 @@ import { colors } from "@/constants/colors";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
+  LayoutChangeEvent,
   NativeScrollEvent,
   NativeSyntheticEvent,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
-  useWindowDimensions,
 } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -25,7 +25,7 @@ interface SegmentedControlProps {
   labelOverrides?: Record<string, string>;
 }
 
-const MAX_VISIBLE_ITEMS = 3;
+const TAB_HORIZONTAL_PADDING = 16;
 
 const SegmentedControl: React.FC<SegmentedControlProps> = ({
   options,
@@ -33,62 +33,66 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({
   onOptionPress,
   labelOverrides = {},
 }) => {
-  const { width: windowWidth } = useWindowDimensions();
   const scrollRef = React.useRef<ScrollView>(null);
 
-  const internalPadding = 10;
-  // Same overall width budget as before - keeps 2/3-option screens
-  // (myFarmers, myFarmerDetails) looking exactly like they did.
-  const segmentedControlWidth = windowWidth / 1.75;
-  const visibleCount = Math.min(options.length, MAX_VISIBLE_ITEMS);
-  const itemWidth = (segmentedControlWidth - internalPadding) / visibleCount;
-  const isScrollable = options.length > MAX_VISIBLE_ITEMS;
+  // Each tab reports its own real x/width once rendered, instead of the
+  // old approach of dividing a fixed container width evenly by option
+  // count - that's what was truncating longer labels like "Farm
+  // Details" once there were more than 1-2 short tabs.
+  const [layouts, setLayouts] = React.useState<
+    Record<string, { x: number; width: number }>
+  >({});
+  const [containerWidth, setContainerWidth] = React.useState(0);
+  const [contentWidth, setContentWidth] = React.useState(0);
+  const [showRightHint, setShowRightHint] = React.useState(false);
 
-  const [showRightHint, setShowRightHint] = React.useState(isScrollable);
+  const selectedLayout = layouts[selectedOption];
+  const isScrollable = containerWidth > 0 && contentWidth > containerWidth;
 
   const rStyle = useAnimatedStyle(() => {
+    if (!selectedLayout) return { opacity: 0 };
     return {
-      left: withTiming(
-        itemWidth * options.indexOf(selectedOption) + internalPadding / 2
-      ),
+      opacity: 1,
+      left: withTiming(selectedLayout.x),
+      width: withTiming(selectedLayout.width),
     };
-  }, [selectedOption, options, itemWidth]);
+  }, [selectedLayout]);
+
+  const handleTabLayout = (option: string) => (event: LayoutChangeEvent) => {
+    const { x, width } = event.nativeEvent.layout;
+    setLayouts((prev) => {
+      const existing = prev[option];
+      if (existing && existing.x === x && existing.width === width) {
+        return prev;
+      }
+      return { ...prev, [option]: { x, width } };
+    });
+  };
 
   React.useEffect(() => {
-    if (!scrollRef.current || !isScrollable) return;
-    const index = options.indexOf(selectedOption);
-    const maxScroll = itemWidth * (options.length - visibleCount);
-    const target = Math.max(
-      0,
-      Math.min(itemWidth * index - itemWidth * (visibleCount - 1), maxScroll)
-    );
+    if (!scrollRef.current || !selectedLayout || !containerWidth) return;
+    const tabCenter = selectedLayout.x + selectedLayout.width / 2;
+    const target = Math.max(0, tabCenter - containerWidth / 2);
     scrollRef.current.scrollTo({ x: target, animated: true });
-  }, [selectedOption]);
+  }, [selectedOption, selectedLayout, containerWidth]);
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    const isAtEnd =
+      contentOffset.x + layoutMeasurement.width >= contentSize.width - 4;
+    setShowRightHint(!isAtEnd && contentSize.width > layoutMeasurement.width);
+  };
 
   const handleOptionPress = (option: any) => {
     onOptionPress?.(option);
   };
 
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    if (!isScrollable) return;
-    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
-    const isAtEnd =
-      contentOffset.x + layoutMeasurement.width >= contentSize.width - 4;
-    setShowRightHint(!isAtEnd);
-  };
-
   return (
-    <View style={{ width: segmentedControlWidth }}>
-      <View
-        style={[
-          styles.container,
-          {
-            width: segmentedControlWidth,
-            borderRadius: 20,
-            justifyContent: isScrollable ? "flex-start" : "center",
-          },
-        ]}
-      >
+    <View
+      style={styles.wrapper}
+      onLayout={(event) => setContainerWidth(event.nativeEvent.layout.width)}
+    >
+      <View style={styles.container}>
         <ScrollView
           ref={scrollRef}
           horizontal
@@ -96,19 +100,21 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({
           showsHorizontalScrollIndicator={false}
           onScroll={handleScroll}
           scrollEventThrottle={16}
-          contentContainerStyle={{ width: itemWidth * options.length }}
+          onContentSizeChange={(w) => setContentWidth(w)}
+          contentContainerStyle={styles.scrollContent}
         >
           <Animated.View
             pointerEvents="none"
-            style={[{ width: itemWidth }, rStyle, styles.activeBox]}
+            style={[styles.activeBox, rStyle]}
           />
           {options.map((option) => {
             const isActive = option === selectedOption;
             return (
               <TouchableOpacity
                 onPress={() => handleOptionPress(option)}
+                onLayout={handleTabLayout(option)}
                 key={option}
-                style={[{ width: itemWidth }, styles.labelContainer]}
+                style={styles.labelContainer}
               >
                 <AppText
                   fontFamily="SemiBold"
@@ -138,17 +144,25 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({
 };
 
 const styles = StyleSheet.create({
+  wrapper: {
+    alignSelf: "center",
+    maxWidth: "100%",
+  },
   container: {
-    flexDirection: "row",
     height: 40,
+    borderRadius: 20,
     backgroundColor: colors.segmentedControlBg,
     overflow: "hidden",
+  },
+  scrollContent: {
+    flexDirection: "row",
+    paddingHorizontal: 5,
   },
   activeBox: {
     position: "absolute",
     borderRadius: 15,
-    height: "80%",
-    top: "10%",
+    height: 32,
+    top: 4,
     backgroundColor: colors.primary,
     zIndex: -1,
     borderWidth: 1.5,
@@ -157,6 +171,7 @@ const styles = StyleSheet.create({
   labelContainer: {
     justifyContent: "center",
     alignItems: "center",
+    paddingHorizontal: TAB_HORIZONTAL_PADDING,
   },
   scrollHint: {
     position: "absolute",
