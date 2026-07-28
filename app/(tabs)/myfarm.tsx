@@ -36,7 +36,10 @@ const TAB_OPTIONS: SegmentedControlValue<"myFarm">[] = [
 ];
 
 const TAB_LABELS: Record<string, string> = {
+  "Farm Details": "Details",
+  "Farm Products": "Products",
   "Soil & Air Quality": "Soil & Air",
+  "Geofencing": "Geofence",
 };
 
 // Tabs that should show the live weather hero. Everything else (Farm
