@@ -6,7 +6,7 @@ import { icons } from "@/constants/icons";
 import { userStore } from "@/stores/userstore";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useStore } from "zustand";
 
@@ -54,12 +54,15 @@ export function formScreenHeaderHandler(title: string) {
     headerStyle: {
       backgroundColor: colors.backgroundPrimary,
     },
+    headerStatusBarHeight: undefined, // let RN Navigation compute it, but see headerTitle below for the explicit fallback
     headerTitle: () => null,
     headerLeft: () => {
+      const insets = useSafeAreaInsets();
       return (
         <Pressable
-          style={styles.applyCreditHeaderLeft}
+          style={[styles.applyCreditHeaderLeft, { marginTop: insets.top > 0 ? 0 : 12 }]}
           onPress={() => router.back()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <View style={styles.applyCreditBackButton}>
             <Image
