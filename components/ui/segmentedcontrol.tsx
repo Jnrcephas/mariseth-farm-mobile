@@ -25,7 +25,7 @@ interface SegmentedControlProps {
   labelOverrides?: Record<string, string>;
 }
 
-const TAB_HORIZONTAL_PADDING = 16;
+const TAB_HORIZONTAL_PADDING = 10;
 
 const SegmentedControl: React.FC<SegmentedControlProps> = ({
   options,
