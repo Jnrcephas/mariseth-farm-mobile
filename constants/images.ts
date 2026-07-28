@@ -6,4 +6,5 @@ export const images = {
   myFarm: require("@/assets/images/myfarm.png"),
   looper: require("@/assets/images/looper.svg"),
   otherLooper: require("@/assets/images/otherlooper.svg"),
+  farmHeroImage: require("@/assets/images/farmHeroImage.jpg")
 };

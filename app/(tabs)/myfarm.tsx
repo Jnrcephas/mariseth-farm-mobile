@@ -14,10 +14,16 @@ import WeatherCard from "@/components/ui/weathercard";
 import { colors } from "@/constants/colors";
 import { endpoints } from "@/constants/endpoints";
 import { isIOS } from "@/constants/generalconstants";
+// ASSUMPTION: placeholder key - point this at whatever your real
+// constants/images.ts exports for a farm/cornfield hero photo (or add
+// the uploaded photo there under this name).
+import { images } from "@/constants/images";
 import { useFetchQuery, usePaginatedInfiniteQuery } from "@/hooks/usefetchquery";
+import { useUniversalStore } from "@/stores/useuniversalstore";
 import { userStore } from "@/stores/userstore";
 import { SegmentedControlValue } from "@/types/universal";
 import { isLeadFarmerUser, isSmallholderUser } from "@/utils/userroles";
+import { Image } from "expo-image";
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useStore } from "zustand";
@@ -33,10 +39,25 @@ const TAB_LABELS: Record<string, string> = {
   "Soil & Air Quality": "Soil & Air",
 };
 
+// Tabs that should show the live weather hero. Everything else (Farm
+// Details, Farm Products) shows a static farm photo instead, since
+// those screens don't need live weather context.
+const WEATHER_HERO_TABS: SegmentedControlValue<"myFarm">[] = [
+  "Soil & Air Quality",
+  "Geofencing",
+];
+
 const MyFarm = () => {
   const user = useStore(userStore, (state) => state.user);
   const isLeaderFarmer = isLeadFarmerUser(user);
   const isSmallholder = isSmallholderUser(user);
+
+  const selectedTab = useUniversalStore(
+    (state) => state.selectedSegmentedOption.myFarm
+  );
+  const showWeatherHero = WEATHER_HERO_TABS.includes(
+    selectedTab ?? TAB_OPTIONS[0]
+  );
 
   const { data, isLoading, error, refetch } = useFetchQuery(
     endpoints.myFarm,
@@ -108,19 +129,39 @@ const MyFarm = () => {
           isSmallholder && styles.heroSectionSmallholder,
         ]}
       >
-        <View style={styles.weatherWrapper}>
-          <WeatherCard variant="farm" farmId={data?.id} />
-          <View style={styles.farmTitleOverlay}>
-            <AppText fontFamily="Bold" fontSize={20} color="white">
-              {data?.name}
-            </AppText>
-            {farmSubtitle ? (
-              <AppText fontFamily="SemiBold" fontSize={16} color="white">
-                {farmSubtitle}
+        {showWeatherHero ? (
+          <View style={styles.weatherWrapper}>
+            <WeatherCard variant="farm" farmId={data?.id} />
+            <View style={styles.farmTitleOverlayTop}>
+              <AppText fontFamily="Bold" fontSize={20} color="white">
+                {data?.name}
               </AppText>
-            ) : null}
+              {farmSubtitle ? (
+                <AppText fontFamily="SemiBold" fontSize={16} color="white">
+                  {farmSubtitle}
+                </AppText>
+              ) : null}
+            </View>
           </View>
-        </View>
+        ) : (
+          <View style={styles.weatherWrapper}>
+            <Image
+              source={images.farmHeroImage}
+              style={styles.farmHeroImage}
+              contentFit="cover"
+            />
+            <View style={styles.farmTitleOverlayBottom}>
+              <AppText fontFamily="Bold" fontSize={20} color="white">
+                {data?.name}
+              </AppText>
+              {farmSubtitle ? (
+                <AppText fontFamily="SemiBold" fontSize={16} color="white">
+                  {farmSubtitle}
+                </AppText>
+              ) : null}
+            </View>
+          </View>
+        )}
       </View>
 
       <SegmentedContentPages storeKey="myFarm" options={TAB_OPTIONS}>
@@ -165,10 +206,22 @@ const styles = StyleSheet.create({
   weatherWrapper: {
     position: "relative",
   },
-  farmTitleOverlay: {
+  farmHeroImage: {
+    width: "100%",
+    height: 220,
+    borderRadius: 16,
+  },
+  farmTitleOverlayTop: {
     position: "absolute",
     left: 25,
     top: 118,
+    right: 16,
+    gap: 3,
+  },
+  farmTitleOverlayBottom: {
+    position: "absolute",
+    left: 20,
+    bottom: 16,
     right: 16,
     gap: 3,
   },
