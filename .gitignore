@@ -41,6 +41,8 @@ yarn-error.*
 .DS_Store
 *.pem
 ios/
+ios/build/
+ios/Pods/
 
 # local env files (redundant with above, kept for clarity/tooling that
 # looks for this exact pattern)
