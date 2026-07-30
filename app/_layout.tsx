@@ -67,16 +67,20 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <StatusBar style="dark" />
         <ToastProvider offset={70} renderType={renderToastType}>
-          <Stack>
-            <Stack.Protected guard={!user}>
+          {!user ? (
+            <Stack>
               <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            </Stack.Protected>
-            <Stack.Protected guard={user !== null}>
+            </Stack>
+          ) : (
+            <Stack>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="more" options={{ headerShown: false }} />
               <Stack.Screen name="home" options={{ headerShown: false }} />
               <Stack.Screen name="myfarm" options={{ headerShown: false }} />
-              <Stack.Screen name="myfarmers" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="myfarmers"
+                options={{ headerShown: false }}
+              />
               <Stack.Screen name="credits" options={{ headerShown: false }} />
               <Stack.Screen
                 name="notifications"
@@ -86,8 +90,8 @@ export default function RootLayout() {
                   animation: Platform.OS === "android" ? "none" : "default",
                 }}
               />
-            </Stack.Protected>
-          </Stack>
+            </Stack>
+          )}
         </ToastProvider>
       </QueryClientProvider>
     </SafeAreaProvider>

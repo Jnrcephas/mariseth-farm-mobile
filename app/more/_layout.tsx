@@ -2,7 +2,9 @@ import {
   changePinHeaderHandler,
   editLeadershipHeaderHandler,
   editProfileHeaderHandler,
+  helpSupportHeaderHandler,
   marketPricesHeaderHandler,
+  profileInformationHeaderHandler,
   walletHeaderHandler,
 } from "@/utils/layoutmethods";
 import { Stack } from "expo-router";
@@ -13,7 +15,7 @@ export default function MoreLayout() {
     <Stack>
       <Stack.Screen
         name="profileinformation"
-        options={{ headerShown: false }}
+        options={profileInformationHeaderHandler()}
       />
       <Stack.Screen name="changepin" options={changePinHeaderHandler()} />
       <Stack.Screen
@@ -26,7 +28,7 @@ export default function MoreLayout() {
       />
       <Stack.Screen
         name="helpsupport"
-        options={{ headerShown: false }}
+        options={helpSupportHeaderHandler()}
       />
       <Stack.Screen name="wallet" options={walletHeaderHandler()} />
       <Stack.Screen

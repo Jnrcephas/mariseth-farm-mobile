@@ -3,19 +3,10 @@ import { colors } from "@/constants/colors";
 import { helpSupportFaqs, helpSupportContact } from "@/constants/generalconstants";
 import { icons } from "@/constants/icons";
 import { Image } from "expo-image";
-import { router } from "expo-router";
 import React, { useState } from "react";
-import {
-  Linking,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 const HelpSupport = () => {
-  const topInset = useSafeAreaInsets().top;
   const [expandedFaqId, setExpandedFaqId] = useState<string | null>(
     helpSupportFaqs[0]?.id ?? null
   );
@@ -28,26 +19,7 @@ const HelpSupport = () => {
   };
 
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={[
-        styles.contentContainer,
-        { paddingTop: topInset + 20 },
-      ]}
-    >
-      <Pressable style={styles.backButtonContainer} onPress={() => router.back()}>
-        <View style={styles.backIcon}>
-          <Image
-            source={icons.arrowLeft}
-            style={styles.backIconImage}
-            tintColor={colors.primary}
-          />
-        </View>
-        <AppText fontFamily="SemiBold" fontSize={14} color="textBold">
-          Back
-        </AppText>
-      </Pressable>
-
+    <ScrollView style={styles.screen} contentContainerStyle={styles.contentContainer}>
       <View style={styles.introSection}>
         <View style={styles.introIconWrap}>
           <Image
@@ -184,33 +156,8 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingHorizontal: 16,
+    paddingTop: 20,
     paddingBottom: 60,
-  },
-  backButtonContainer: {
-    flexDirection: "row",
-    alignSelf: "flex-start",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 18,
-  },
-  backIcon: {
-    width: 34,
-    height: 34,
-    borderWidth: 0.85,
-    borderRadius: 7,
-    borderColor: "#E2E8F0",
-    backgroundColor: colors.backgroundPrimary,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3.4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  backIconImage: {
-    width: 17,
-    height: 17,
   },
   introSection: {
     alignItems: "center",

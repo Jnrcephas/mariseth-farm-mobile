@@ -94,7 +94,6 @@ const ChangePin = () => {
         contentContainerStyle={styles.scrollContent}
       >
         <PinField
-          autoFocus
           label="Enter Old Pin"
           value={formik.values.old_pin}
           error={formik.touched.old_pin && formik.errors.old_pin}
@@ -154,7 +153,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 120,
-    gap: 32,
+    gap: 16,
   },
   pinField: {
     gap: 12,

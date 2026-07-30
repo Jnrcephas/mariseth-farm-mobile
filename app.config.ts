@@ -49,6 +49,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       light: "./assets/images/appicons/ios-light.png",
       tinted: "./assets/images/appicons/ios-dark.png",
     },
+    infoPlist: {
+      NSAppTransportSecurity: {
+        NSAllowsArbitraryLoads: false,
+        NSExceptionDomains: {
+          "13.140.140.177": {
+            NSExceptionAllowsInsecureHTTPLoads: true,
+            NSIncludesSubdomains: true,
+          },
+        },
+      },
+    },
   },
   android: {
     adaptiveIcon: {
@@ -97,6 +108,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     "expo-font",
+    "expo-asset",
   ],
   experiments: {
     typedRoutes: true,
