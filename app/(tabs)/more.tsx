@@ -83,7 +83,7 @@ const More = () => {
                   {getLinkLabel(item, isSmallholder)}
                 </AppText>
                 <Image
-                  source={isLogout ? icons.arrowRight : icons.arrowDown}
+                  source={icons.arrowRight}
                   style={[
                     styles.chevronIcon,
                     { tintColor: isLogout ? colors.error : colors.primary },

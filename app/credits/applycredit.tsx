@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 120,
-    gap: 32,
+    gap: 16,
   },
   formSection: {
     gap: 24,

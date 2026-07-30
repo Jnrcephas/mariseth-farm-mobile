@@ -17,6 +17,7 @@ export function headerHandler(route_label?: string): any {
     headerStyle: {
       backgroundColor: colors.backgroundPrimary,
     },
+    title: "",
 
     headerTitleAlign: "center",
     headerTitle: () => {
@@ -55,6 +56,7 @@ export function formScreenHeaderHandler(title: string) {
       backgroundColor: colors.backgroundPrimary,
     },
     headerStatusBarHeight: undefined, // let RN Navigation compute it, but see headerTitle below for the explicit fallback
+    title: "",
     headerTitle: () => null,
     headerLeft: () => {
       const insets = useSafeAreaInsets();
@@ -129,6 +131,14 @@ export function walletHeaderHandler() {
 
 export function marketPricesHeaderHandler() {
   return formScreenHeaderHandler("Market Prices");
+}
+
+export function profileInformationHeaderHandler() {
+  return formScreenHeaderHandler("My Information");
+}
+
+export function helpSupportHeaderHandler() {
+  return formScreenHeaderHandler("Help & Support");
 }
 
 export function tabScreenOptions(
@@ -366,5 +376,3 @@ const styles = StyleSheet.create({
     gap: 20,
   },
 });
-
-

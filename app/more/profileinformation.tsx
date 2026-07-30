@@ -1,16 +1,13 @@
 import InfoCard from "@/components/ui/infocard";
 import ProfileCard, { formatPhoneDisplay } from "@/components/ui/profilecard";
-import AppText from "@/components/ui/apptext";
 import { colors } from "@/constants/colors";
 import { icons } from "@/constants/icons";
 import { userStore } from "@/stores/userstore";
 import { isLeadFarmerUser, isSmallholderUser } from "@/utils/userroles";
 import { format, parseISO } from "date-fns";
-import { Image } from "expo-image";
 import { router } from "expo-router";
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ScrollView, StyleSheet } from "react-native";
 
 const displayValue = (value?: string | number | null) => {
   if (value === undefined || value === null || value === "") {
@@ -31,7 +28,6 @@ const formatDateOfBirth = (value?: string) => {
 };
 
 const ProfileInformation = () => {
-  const topInset = useSafeAreaInsets().top;
   const user = userStore((state) => state.user);
   const farmer = user?.farmer;
   const isLeaderFarmer = isLeadFarmerUser(user);
@@ -94,13 +90,13 @@ const ProfileInformation = () => {
       },
       ...(isMentoring
         ? [
-            {
-              key: "If Yes, how many farmers are you mentoring",
-              value: displayValue(
-                leaderShipExperience?.number_of_farmers_mentoring
-              ),
-            },
-          ]
+          {
+            key: "If Yes, how many farmers are you mentoring",
+            value: displayValue(
+              leaderShipExperience?.number_of_farmers_mentoring
+            ),
+          },
+        ]
         : []),
       {
         key: "Membership in Farming Cooperatives/Associations",
@@ -126,25 +122,9 @@ const ProfileInformation = () => {
   return (
     <ScrollView
       style={styles.profileInfoContainer}
-      contentContainerStyle={[
-        styles.contentContainer,
-        { paddingTop: topInset + 20 },
-      ]}
+      contentContainerStyle={styles.contentContainer}
     >
       <ProfileCard item={user} readonly />
-
-      <Pressable style={styles.backButtonContainer} onPress={() => router.back()}>
-        <View style={styles.backIcon}>
-          <Image
-            source={icons.arrowLeft}
-            style={styles.backIconImage}
-            tintColor={colors.primary}
-          />
-        </View>
-        <AppText fontFamily="SemiBold" fontSize={14} color="textBold">
-          Back
-        </AppText>
-      </Pressable>
 
       <InfoCard info={basicProfileInfo} />
       {showLeadershipExperience ? (
@@ -163,33 +143,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingHorizontal: 16,
+    paddingTop: 20,
     paddingBottom: 60,
-  },
-  backButtonContainer: {
-    flexDirection: "row",
-    alignSelf: "flex-start",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 18,
-    marginBottom: 18,
-  },
-  backIcon: {
-    width: 34,
-    height: 34,
-    borderWidth: 0.85,
-    borderRadius: 7,
-    borderColor: "#E2E8F0",
-    backgroundColor: colors.backgroundPrimary,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3.4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  backIconImage: {
-    width: 17,
-    height: 17,
   },
 });
