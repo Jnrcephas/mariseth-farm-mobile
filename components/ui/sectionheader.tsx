@@ -65,30 +65,31 @@ const SectionHeader: React.FC<sectionHeaderProps> = ({
                 {btnTitle}
               </AppText>
             </Pressable>
-          ) : null}
-          <Pressable
-            style={
-              editVariant === "muted"
-                ? styles.mutedEditButton
-                : commonStyles.editButton
-            }
-            onPress={onPress}
-          >
-            <Image
-              source={icons[btnIcon]}
-              style={{ width: 12, height: 12, marginRight: 6 }}
-              tintColor={
-                editVariant === "muted" ? colors.buttonPrimary : undefined
+          ) : (
+            <Pressable
+              style={
+                editVariant === "muted"
+                  ? styles.mutedEditButton
+                  : commonStyles.editButton
               }
-            />
-            <AppText
-              fontFamily="Medium"
-              fontSize={12}
-              color={editVariant === "muted" ? "tabBarInactive" : "primary"}
+              onPress={onPress}
             >
-              {btnTitle}
-            </AppText>
-          </Pressable>
+              <Image
+                source={icons[btnIcon]}
+                style={{ width: 12, height: 12, marginRight: 6 }}
+                tintColor={
+                  editVariant === "muted" ? colors.buttonPrimary : undefined
+                }
+              />
+              <AppText
+                fontFamily="Medium"
+                fontSize={12}
+                color={editVariant === "muted" ? "tabBarInactive" : "primary"}
+              >
+                {btnTitle}
+              </AppText>
+            </Pressable>
+          )}
         </View>
       ) : null}
     </View>

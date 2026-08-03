@@ -63,6 +63,7 @@
     "react-native-svg": "15.8.0",
     "react-native-toast-notifications": "^3.4.0",
     "react-native-ui-datepicker": "^3.1.2",
+    "yarn": "^1.22.22",
     "yup": "^1.6.1",
     "zustand": "^5.0.5"
   },

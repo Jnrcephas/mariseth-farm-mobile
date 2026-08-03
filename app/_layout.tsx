@@ -68,24 +68,20 @@ export default function RootLayout() {
         <StatusBar style="dark" />
         <ToastProvider offset={70} renderType={renderToastType}>
           {!user ? (
-            <Stack>
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(auth)" />
             </Stack>
           ) : (
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="more" options={{ headerShown: false }} />
-              <Stack.Screen name="home" options={{ headerShown: false }} />
-              <Stack.Screen name="myfarm" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="myfarmers"
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen name="credits" options={{ headerShown: false }} />
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="more" />
+              <Stack.Screen name="home" />
+              <Stack.Screen name="myfarm" />
+              <Stack.Screen name="myfarmers" />
+              <Stack.Screen name="credits" />
               <Stack.Screen
                 name="notifications"
                 options={{
-                  headerShown: false,
                   presentation: "modal",
                   animation: Platform.OS === "android" ? "none" : "default",
                 }}

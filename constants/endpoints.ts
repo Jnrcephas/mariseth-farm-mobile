@@ -22,6 +22,12 @@ export const endpoints = {
   paybackHistory: `${base}/credit/payback-history`,
   inputCredits: `${base}/credit/list-input-credits`,
 
+
+    // PRODUCTS - shared farm-management resource, same one the web app
+  // uses (GET /api/v1/farm-management/product), so no consumer/mobile
+  // prefix here.
+  products: `farm-management/product`,
+  
   // FARMS ENDPOINTS
   myFarm: `${base}/farm/my-farm`,
 

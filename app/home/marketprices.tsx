@@ -1,45 +1,57 @@
 import AppText from "@/components/ui/apptext";
 import { colors } from "@/constants/colors";
+import { endpoints } from "@/constants/endpoints";
 import { isIOS } from "@/constants/generalconstants";
 import { icons } from "@/constants/icons";
+import { usePaginatedInfiniteQuery } from "@/hooks/usefetchquery"; // adjust path to wherever this hook actually lives
 import { Image } from "expo-image";
 import React from "react";
-import { FlatList, StyleSheet, View } from "react-native";
+import { ActivityIndicator, FlatList, StyleSheet, View } from "react-native";
 
-// NOTE: There is no market-prices endpoint wired up yet (nothing like
-// "market" or "prices" in constants/endpoints.ts). Per SRD section 4.3
-// (USSD Market Price Inquiry) and the mobile screens table (8.3), this
-// uses illustrative placeholder data so the screen is ready to receive
-// real data. SWAP OUT marketPrices for a real useFetchQuery hook once a
-// prices endpoint exists - search "marketPrices" to find this again.
-type MarketPrice = {
-  id: string;
-  commodity: string;
-  unit: string;
-  price: number;
-  change: "up" | "down" | "flat";
-  lastUpdated: string;
+// Product shape as returned by GET /api/v1/farm-management/product
+// (same endpoint the web admin's Products screen uses). See sample
+// response - price currently always comes back as "0.00" from the
+// backend, so it's rendered as-is rather than hidden.
+interface ProductCategory {
+  id: number;
+  name: string;
+}
+
+interface Metric {
+  id: number;
+  name: string;
+}
+
+interface Product {
+  id: number;
+  product_id: string;
+  name: string;
+  category: ProductCategory | null;
+  weight: string | null;
+  weight_metric: Metric | null;
+  quantity: string | null;
+  quantity_metric: Metric | null;
+  type: string;
+  season_status: "in" | "out" | string;
+  status: string;
+  last_updated: string;
+  price: string;
+}
+
+const formatUpdatedDate = (value?: string) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 };
 
-const marketPrices: MarketPrice[] = [
-  { id: "1", commodity: "Maize", unit: "kg", price: 2.5, change: "up", lastUpdated: "Today, 7:00 AM" },
-  { id: "2", commodity: "Cassava", unit: "kg", price: 1.8, change: "flat", lastUpdated: "Today, 7:00 AM" },
-  { id: "3", commodity: "Tomatoes", unit: "crate", price: 340, change: "down", lastUpdated: "Today, 7:00 AM" },
-  { id: "4", commodity: "Rice (Paddy)", unit: "kg", price: 3.2, change: "up", lastUpdated: "Yesterday, 6:45 AM" },
-  { id: "5", commodity: "Yam", unit: "tuber", price: 12.5, change: "flat", lastUpdated: "Yesterday, 6:45 AM" },
-  { id: "6", commodity: "Groundnut", unit: "kg", price: 4.1, change: "up", lastUpdated: "20 Jul 2026" },
-  { id: "7", commodity: "Plantain", unit: "bunch", price: 28, change: "down", lastUpdated: "20 Jul 2026" },
-  { id: "8", commodity: "Onion", unit: "kg", price: 5.6, change: "flat", lastUpdated: "19 Jul 2026" },
-];
-
-const changeMeta = {
-  up: { color: colors.primary, label: "▲" },
-  down: { color: colors.error, label: "▼" },
-  flat: { color: colors.formPlaceholderText, label: "—" },
-};
-
-const PriceRow = ({ item }: { item: MarketPrice }) => {
-  const meta = changeMeta[item.change];
+const PriceRow = ({ item }: { item: Product }) => {
+  const unit = item.weight_metric?.name || item.quantity_metric?.name || "";
+  const price = Number(item.price ?? 0);
 
   return (
     <View style={styles.row}>
@@ -49,28 +61,54 @@ const PriceRow = ({ item }: { item: MarketPrice }) => {
 
       <View style={styles.details}>
         <AppText fontFamily="Medium" fontSize={14} color="textBold">
-          {item.commodity}
+          {item.name}
         </AppText>
         <AppText fontFamily="Regular" fontSize={12} color="formPlaceholderText">
-          Updated: {item.lastUpdated}
+          Updated: {formatUpdatedDate(item.last_updated)}
         </AppText>
       </View>
 
       <View style={styles.priceWrap}>
         <AppText fontFamily="SemiBold" fontSize={14} color="textBold">
-          GHS {item.price.toFixed(2)}
+          GHS {price.toFixed(2)}
         </AppText>
-        <View style={styles.changeRow}>
-          <AppText fontFamily="Medium" fontSize={11} style={{ color: meta.color }}>
-            {meta.label} per {item.unit}
+        {unit ? (
+          <AppText
+            fontFamily="Medium"
+            fontSize={11}
+            style={{ color: colors.formPlaceholderText }}
+          >
+            per {unit}
           </AppText>
-        </View>
+        ) : null}
       </View>
     </View>
   );
 };
 
 const MarketPrices = () => {
+  const {
+    items: products,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    error,
+  } = usePaginatedInfiniteQuery<Product>(
+    endpoints.products,
+    "market-prices",
+    { type: "crop", page_size: 10 }
+  );
+
+  React.useEffect(() => {
+    if (error) {
+      console.log("[MarketPrices] load error", {
+        endpoint: endpoints.products,
+        error,
+      });
+    }
+  }, [error]);
+
   return (
     <View style={styles.screen}>
       <AppText
@@ -82,16 +120,46 @@ const MarketPrices = () => {
         Latest commodity prices from your region
       </AppText>
 
-      <FlatList
-        data={marketPrices}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <PriceRow item={item} />}
-        contentContainerStyle={{
-          paddingHorizontal: 16,
-          paddingBottom: isIOS ? "20%" : "12%",
-        }}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-      />
+      {isLoading ? (
+        <View style={styles.centered}>
+          <ActivityIndicator color={colors.primary} />
+        </View>
+      ) : error ? (
+        <View style={styles.centered}>
+          <AppText fontFamily="Medium" fontSize={13} color="formPlaceholderText">
+            Couldn't load market prices. Pull to try again.
+          </AppText>
+        </View>
+      ) : (
+        <FlatList
+          data={products}
+          keyExtractor={(item) => String(item.id)}
+          renderItem={({ item }) => <PriceRow item={item} />}
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingBottom: isIOS ? "20%" : "12%",
+          }}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          onEndReachedThreshold={0.4}
+          onEndReached={() => {
+            if (hasNextPage) fetchNextPage();
+          }}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <View style={{ paddingVertical: 16 }}>
+                <ActivityIndicator color={colors.primary} />
+              </View>
+            ) : null
+          }
+          ListEmptyComponent={
+            <View style={styles.centered}>
+              <AppText fontFamily="Medium" fontSize={13} color="formPlaceholderText">
+                No commodity prices available yet.
+              </AppText>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 };
@@ -107,6 +175,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginTop: 16,
     marginBottom: 8,
+  },
+  centered: {
+    paddingVertical: 40,
+    alignItems: "center",
+    justifyContent: "center",
   },
   row: {
     flexDirection: "row",
@@ -134,14 +207,8 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     gap: 2,
   },
-  changeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
   separator: {
     height: 1,
     backgroundColor: colors.light,
   },
 });
-
-

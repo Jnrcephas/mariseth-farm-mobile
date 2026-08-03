@@ -88,6 +88,15 @@ function usePaginatedInfiniteQuery<T>(
       if (response.ok && response.data) {
         return response.data;
       } else {
+        console.log("[usePaginatedInfiniteQuery] request failed", {
+          endpoint,
+          params,
+          pageParam,
+          problem: response.problem,
+          status: response.status,
+          data: response.data,
+          originalError: (response as any).originalError,
+        });
         throw {
           problem: response.problem,
           message: response.data,
