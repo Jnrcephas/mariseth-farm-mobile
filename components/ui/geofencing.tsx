@@ -2,27 +2,30 @@ import { colors } from "@/constants/colors";
 import { icons } from "@/constants/icons";
 import { width } from "@/constants/generalconstants";
 import { myFarm } from "@/types/farm";
-import { isBoundaryMissingError, useFarmWeather } from "@/hooks/usefetchquery";
 import { userStore } from "@/stores/userstore";
 import { canEditOwnFarm } from "@/utils/userroles";
 import { router } from "expo-router";
 import { Image } from "expo-image";
 import React from "react";
-import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import AppText from "./apptext";
 
-// Boundary status is inferred from the weather endpoint's error, the
-// same way weathercard.tsx does it (via isBoundaryMissingError in
-// hooks/usefetchquery.ts). Confirmed against a real backend response:
-// GET weather/{farmId} returns 400 {"message":"No boundary setup for
-// farm"} when no boundary is set.
+// Boundary status used to be inferred from the weather endpoint's error
+// (via isBoundaryMissingError), on the assumption that weather required
+// a boundary to be set. Confirmed with the backend team that this is
+// NOT the case - weather/soil quality are resolved purely from the farm
+// id and don't depend on boundary at all. That heuristic (and the
+// `weather/{farmId}` endpoint it was based on) was wrong - see
+// hooks/usefetchquery.ts and constants/endpoints.ts for the fix.
 //
-// OPEN QUESTION: a regular consumer/mobile-authenticated user currently
-// gets a 403 permission error calling this endpoint rather than the
-// boundary check itself - confirm with backend whether that's expected
-// before relying on this in production. If consumer users can never
-// reach the boundary check, this card will show a generic error instead
-// of real boundary status for them.
+// This now reads `farm.boundary` directly off the farm object instead,
+// the same way the admin web app's Geofencing tab does. OPEN QUESTION:
+// confirm with backend that `boundary` is actually included on the
+// GET my-farm / lead-farmer farm responses after being saved (the admin
+// web app hit a real gap here - PUT accepted `boundary` in the request
+// body but didn't echo/persist it back on farm reads). If that's also
+// true here, this will show "No boundary set" even after saving one
+// until that's fixed server-side.
 interface GeofencingProps {
   farm?: myFarm;
 }
@@ -31,10 +34,7 @@ const Geofencing: React.FC<GeofencingProps> = ({ farm }) => {
   const user = userStore((state) => state.user);
   const canEdit = canEditOwnFarm(user);
 
-  const { isLoading, error } = useFarmWeather(farm?.id);
-  const boundaryMissing = isBoundaryMissingError(error);
-  const hasOtherError = !!error && !boundaryMissing;
-  const hasBoundary = !error;
+  const hasBoundary = !!farm?.boundary;
 
   const handleManageBoundary = () => {
     router.navigate("/myfarm/editfarmdetails");
@@ -44,47 +44,35 @@ const Geofencing: React.FC<GeofencingProps> = ({ farm }) => {
 
   return (
     <View style={{ width, paddingHorizontal: 16, gap: 16 }}>
-      {isLoading ? (
-        <View style={styles.loadingCard}>
-          <ActivityIndicator color={colors.primary} />
+      <View style={styles.statusCard}>
+        <View
+          style={[
+            styles.statusIconWrap,
+            { backgroundColor: statusIcon + "1A" },
+          ]}
+        >
+          <Image
+            source={icons.location}
+            style={{ width: 22, height: 22 }}
+            tintColor={statusIcon}
+          />
         </View>
-      ) : (
-        <View style={styles.statusCard}>
-          <View
-            style={[
-              styles.statusIconWrap,
-              { backgroundColor: statusIcon + "1A" },
-            ]}
+        <View style={{ flex: 1 }}>
+          <AppText fontFamily="SemiBold" fontSize={15} color="textBold">
+            {hasBoundary ? "Boundary set" : "No boundary set"}
+          </AppText>
+          <AppText
+            fontFamily="Regular"
+            fontSize={12}
+            color="formPlaceholderText"
+            style={{ marginTop: 2, lineHeight: 18 }}
           >
-            <Image
-              source={icons.location}
-              style={{ width: 22, height: 22 }}
-              tintColor={statusIcon}
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <AppText fontFamily="SemiBold" fontSize={15} color="textBold">
-              {hasOtherError
-                ? "Couldn't check boundary status"
-                : hasBoundary
-                ? "Boundary set"
-                : "No boundary set"}
-            </AppText>
-            <AppText
-              fontFamily="Regular"
-              fontSize={12}
-              color="formPlaceholderText"
-              style={{ marginTop: 2, lineHeight: 18 }}
-            >
-              {hasOtherError
-                ? "We couldn't confirm the boundary status for this farm right now. You can still manage it below."
-                : hasBoundary
-                ? "This farm's boundary is mapped, so weather and location-based features are active."
-                : "Mark this farm's boundary on the map to enable weather and location-based features."}
-            </AppText>
-          </View>
+            {hasBoundary
+              ? "This farm's boundary is mapped, so location-based features are active."
+              : "Mark this farm's boundary on the map to enable location-based features."}
+          </AppText>
         </View>
-      )}
+      </View>
 
       <View style={styles.mapPlaceholder}>
         <Image

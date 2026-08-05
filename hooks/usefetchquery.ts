@@ -21,6 +21,10 @@ function useFetchQuery(
     queryFn: async () => {
       const response: ApiResponse<any> = await apiClient.get(endpoint);
       if (response.ok) {
+        console.log(`[useFetchQuery:${key}] success`, {
+          endpoint,
+          data: response.data,
+        });
         return response.data;
       } else {
         const error = {
@@ -28,6 +32,12 @@ function useFetchQuery(
           message: response.data,
           status: response.status,
         };
+        console.log(`[useFetchQuery:${key}] request failed`, {
+          endpoint,
+          status: response.status,
+          problem: response.problem,
+          data: response.data,
+        });
         throw error;
       }
     },
@@ -125,69 +135,62 @@ function usePaginatedInfiniteQuery<T>(
 }
 
 // NOTE: previously this called WeatherAPI.com directly using the
-// farmer's registered village name as a free-text location. Now that the
-// backend has its own weather endpoint tied to a specific farm's
-// boundary (GET api/v1/weather/{farm_id} - see constants/endpoints.ts),
-// weather is fetched through the normal apiClient instead, keyed by farm
-// id rather than a location string. Farms without a boundary set will
-// get an error back - see isBoundaryMissingError below.
+// farmer's registered village name as a free-text location. The backend
+// now has its own weather endpoint tied to a specific farm
+// (GET api/v1/agro-monitoring/{farm_id}/weather - see
+// constants/endpoints.ts), keyed by farm id. Confirmed with the backend
+// team: this does NOT require the farm to have a boundary set - it
+// resolves location purely from the farm id server-side. (The previous
+// `weather/{farmId}` path used here, and the "boundary required" gating
+// that used to live in this file/WeatherCard/Geofencing, were based on a
+// different/incorrect endpoint - see git history.)
 //
-// ASSUMPTION: kept the exact same response shape WeatherCard already
-// depends on (location/current/forecast/alerts, WeatherAPI.com-style
-// field names like temp_c, condition.text, daily_chance_of_rain) on the
-// assumption the backend proxies/forwards a WeatherAPI.com-compatible
-// payload rather than reshaping it. If the real response differs, this
-// interface and WeatherCard's field access are the two places to update
-// - nothing else should need to change.
-interface WeatherCondition {
-  text: string;
+// The real response is an OpenWeatherMap-style "current weather" object -
+// NOT the WeatherAPI.com shape (location/current/forecast/alerts) this
+// used to assume. Confirmed against a real response, e.g.:
+// { "temp": 298.01, "pressure": 1015.0, "humidity": 75.0, "clouds": 19.0,
+//   "wind_speed": 3.15, "wind_deg": 208.0,
+//   "weather": [{ "main": "Clouds", "description": "few clouds", "icon": "02n" }],
+//   "farm": null, ... }
+// Notably there is no forecast or alerts data, and temp/wind are in
+// Kelvin/m-per-s rather than °C/km-h, so those need converting before
+// display.
+export function kelvinToCelsius(kelvin: number): number {
+  return kelvin - 273.15;
+}
+
+export function mpsToKph(metersPerSecond: number): number {
+  return metersPerSecond * 3.6;
+}
+
+export interface WeatherConditionEntry {
+  id: number;
+  main: string;
+  description: string;
   icon: string;
-  code: number;
-}
-
-interface CurrentWeather {
-  last_updated: string;
-  temp_c: number;
-  temp_f: number;
-  is_day: number;
-  condition: WeatherCondition;
-  wind_kph: number;
-  humidity: number;
-  feelslike_c: number;
-  uv: number;
-  pressure_mb: number;
-  vis_km: number;
-}
-
-interface WeatherLocation {
-  name: string;
-  region: string;
-  country: string;
-  localtime: string;
 }
 
 export interface FarmWeatherResponse {
-  location: WeatherLocation;
-  current: CurrentWeather;
-  forecast?: {
-    forecastday: Array<{
-      date: string;
-      day: {
-        maxtemp_c: number;
-        mintemp_c: number;
-        condition: WeatherCondition;
-        daily_chance_of_rain: number;
-      };
-    }>;
-  };
-  alerts?: {
-    alert: Array<{
-      headline: string;
-      severity: string;
-      event: string;
-      desc: string;
-    }>;
-  };
+  id: number;
+  hour_key?: string;
+  lat: number | null;
+  lon: number | null;
+  sunrise?: string | null;
+  sunset?: string | null;
+  temp: number | null; // Kelvin
+  temp_max: number | null;
+  temp_min: number | null;
+  pressure: number | null;
+  humidity: number | null;
+  dew_point?: number | null;
+  uvi?: number | null;
+  clouds: number | null;
+  visibility?: number | null;
+  wind_speed: number | null; // m/s
+  wind_deg: number | null;
+  wind_gust?: number | null;
+  weather: WeatherConditionEntry[];
+  farm: number | null;
 }
 
 interface ApiError {
@@ -196,31 +199,29 @@ interface ApiError {
   payload?: any;
 }
 
-// The backend returns an error (400/404, exact shape TBC with backend
-// team) when a farm has no boundary set yet - this heuristic flags that
-// case so the UI can show "set your farm boundary" instead of a generic
-// error. Tighten this once the exact error shape is confirmed.
-export function isBoundaryMissingError(error: any): boolean {
-  if (!error) return false;
-  const text = JSON.stringify(error).toLowerCase();
-  return (
-    (error?.status === 400 || error?.status === 404) &&
-    text.includes("boundary")
-  );
-}
-
 function useFarmWeather(
   farmId: number | string | undefined,
   options?: Omit<UseQueryOptions<FarmWeatherResponse, ApiError>, "queryKey" | "queryFn" | "enabled">
 ) {
+  console.log("[useFarmWeather] called with", { farmId, enabled: !!farmId });
+
   const { data, isLoading, error } = useQuery<FarmWeatherResponse, ApiError>({
     queryKey: ["farm-weather", farmId],
     enabled: !!farmId,
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
-      const response: ApiResponse<FarmWeatherResponse> = await apiClient.get(
-        endpoints.weather(farmId as number | string)
-      );
+      const url = endpoints.weather(farmId as number | string);
+      console.log("[useFarmWeather] fetching", { url, farmId });
+
+      const response: ApiResponse<FarmWeatherResponse> = await apiClient.get(url);
+
+      console.log("[useFarmWeather] response", {
+        url,
+        ok: response.ok,
+        status: response.status,
+        problem: response.problem,
+        data: response.data,
+      });
 
       if (response.ok && response.data) {
         return response.data;
@@ -240,7 +241,83 @@ function useFarmWeather(
     ...options,
   });
 
+  console.log("[useFarmWeather] state", {
+    farmId,
+    isLoading,
+    hasData: !!data,
+    error,
+  });
+
   return { data, isLoading, error };
 }
 
-export { useFarmWeather, useFetchQuery, usePaginatedInfiniteQuery };
+// Same shape/relationship as weather above - keyed by farm id, no
+// boundary required. Confirmed against a real response, e.g.:
+// { "provider": "open_weatherapi", "dt": "2026-08-04T12:00:00Z",
+//   "t10": 297.065 (subsoil temp, Kelvin), "moisture": 0.218 (fraction,
+//   multiply by 100 for %), "t0": 300.663 (topsoil temp, Kelvin),
+//   "farm": 9264 }
+export interface FarmSoilQualityResponse {
+  id: number;
+  provider?: string | null;
+  hour_key?: string;
+  dt?: string | null; // reading timestamp
+  t10: number | null; // subsoil (10cm) temp, Kelvin
+  moisture: number | null; // fraction, e.g. 0.218 = 21.8%
+  t0: number | null; // topsoil temp, Kelvin
+  farm: number | null;
+}
+
+function useFarmSoilQuality(
+  farmId: number | string | undefined,
+  options?: Omit<UseQueryOptions<FarmSoilQualityResponse, ApiError>, "queryKey" | "queryFn" | "enabled">
+) {
+  console.log("[useFarmSoilQuality] called with", { farmId, enabled: !!farmId });
+
+  const { data, isLoading, error } = useQuery<FarmSoilQualityResponse, ApiError>({
+    queryKey: ["farm-soil-quality", farmId],
+    enabled: !!farmId,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const url = endpoints.soilQuality(farmId as number | string);
+      console.log("[useFarmSoilQuality] fetching", { url, farmId });
+
+      const response: ApiResponse<FarmSoilQualityResponse> = await apiClient.get(url);
+
+      console.log("[useFarmSoilQuality] response", {
+        url,
+        ok: response.ok,
+        status: response.status,
+        problem: response.problem,
+        data: response.data,
+      });
+
+      if (response.ok && response.data) {
+        return response.data;
+      }
+
+      throw {
+        message: getErrorMessage(
+          response.status ?? 0,
+          typeof response.data === "string"
+            ? response.data
+            : JSON.stringify(response.data ?? {})
+        ),
+        status: response.status,
+        payload: response.data,
+      };
+    },
+    ...options,
+  });
+
+  console.log("[useFarmSoilQuality] state", {
+    farmId,
+    isLoading,
+    hasData: !!data,
+    error,
+  });
+
+  return { data, isLoading, error };
+}
+
+export { useFarmWeather, useFarmSoilQuality, useFetchQuery, usePaginatedInfiniteQuery };

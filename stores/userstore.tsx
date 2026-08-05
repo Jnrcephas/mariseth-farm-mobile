@@ -24,6 +24,17 @@ export interface userStoreProps {
   farmProducts: productCatalogItem[];
   farms: any[];
   inputCredits: inputCredit[];
+  // Tracks whether zustand's persist middleware has finished reading the
+  // saved session back out of MMKV. Even though MMKV itself reads
+  // synchronously, zustand's persist middleware always applies the
+  // rehydrated state through a microtask, so `user` can briefly still be
+  // null on the very first render after a cold start/reload even when a
+  // valid session IS saved. Consumers that decide "logged in vs logged
+  // out" (see app/_layout.tsx) must wait for this to be true before
+  // trusting `user === null` to mean "not logged in" - otherwise a
+  // logged-in person gets bounced to the login screen on every reload.
+  hasHydrated: boolean;
+  setHasHydrated: (value: boolean) => void;
 }
 
 const zustandStorage = {
@@ -52,10 +63,28 @@ export const userStore = create(
       farmProducts: [],
       farms: [],
       inputCredits: [],
+      hasHydrated: false,
+      setHasHydrated: (value: boolean) => set({ hasHydrated: value }),
     }),
     {
       name: "auth-storage",
       storage: createJSONStorage(() => zustandStorage),
+      onRehydrateStorage: () => (state, error) => {
+        // Fires once the persisted state has actually been applied to the
+        // store - either way (including on error, or nothing to
+        // restore) this is the earliest point it's safe to trust `user`.
+        // Falls back to a direct setState in case `state` comes back
+        // undefined (e.g. a read/decrypt error), so this can never get
+        // stuck forever leaving the app on the splash screen.
+        if (state) {
+          state.setHasHydrated(true);
+        } else {
+          if (error) {
+            console.log("[userStore] rehydration failed", error);
+          }
+          userStore.setState({ hasHydrated: true });
+        }
+      },
     }
   )
 );

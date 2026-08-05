@@ -303,8 +303,16 @@ const FarmForm: React.FC<farmFormProps> = ({
         </View>
 
         <View style={styles.formSection}>
-          <AppText fontFamily="SemiBold" fontSize={16} color="black" style={{ marginBottom: 12 }}>
-            Farm Boundary
+          <AppText fontFamily="SemiBold" fontSize={16} color="black" style={{ marginBottom: 4 }}>
+            Farm Boundary (Optional)
+          </AppText>
+          <AppText
+            fontFamily="Regular"
+            fontSize={12}
+            color="formPlaceholderText"
+            style={{ marginBottom: 12 }}
+          >
+            Used for geofencing and asset tracking. Not required for weather or soil data.
           </AppText>
           <FarmBoundaryCapture
             points={formik.values.boundary ?? []}
@@ -395,4 +403,3 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
   },
 });
-
