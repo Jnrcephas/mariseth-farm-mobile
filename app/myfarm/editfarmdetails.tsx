@@ -88,15 +88,22 @@ const EditFarmDetails = () => {
     },
     validationSchema: adddFarmerSchema,
     onSubmit: async (values) => {
-      const boundaryGeoJSON = pointsToGeoJSON(values.boundary);
-      if (!boundaryGeoJSON) {
+      // Boundary is optional - it's only used for the Geofencing/asset-
+      // tracking feature (confirmed with backend: weather and soil
+      // quality are resolved purely from the farm id and don't need
+      // it). If the farmer hasn't drawn one, just submit without it.
+      // Only block if they've started marking points but haven't
+      // finished (need 3+ to form a valid shape).
+      const { boundary: boundaryPoints, ...rest } = values;
+      if (boundaryPoints.length > 0 && boundaryPoints.length < 3) {
         handleToastShow(
           toast,
-          "Mark at least 3 points on the boundary before submitting. Without it, this farm won't receive weather data."
+          "Add at least 3 points to complete the boundary, or clear them to skip it for now."
         );
         return;
       }
-      mutate({ ...values, boundary: boundaryGeoJSON });
+      const boundaryGeoJSON = pointsToGeoJSON(boundaryPoints);
+      mutate(boundaryGeoJSON ? { ...rest, boundary: boundaryGeoJSON } : rest);
     },
   });
 

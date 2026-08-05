@@ -19,7 +19,26 @@ import { useStore } from "zustand";
 SplashScreen.preventAutoHideAsync();
 
 const SPLASH_MIN_MS = 2000;
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // No retry/backoff config existed here before, so every failed
+      // query (this hook and every other one in the app) inherited React
+      // Query's default of retrying 3x with backoff - including on 4xx
+      // client errors like 403/404/429 that will never succeed by
+      // retrying. For 429 specifically (seen on the weather endpoint)
+      // this actively makes things worse: the retries themselves keep
+      // the endpoint rate-limited, so it can never recover on its own.
+      // Only retry transient/server errors (network issues, 5xx), and
+      // only once.
+      retry: (failureCount, error: any) => {
+        const status = error?.status;
+        if (status && status >= 400 && status < 500) return false;
+        return failureCount < 1;
+      },
+    },
+  },
+});
 
 export default function RootLayout() {
   SplashScreen.setOptions({
@@ -28,6 +47,7 @@ export default function RootLayout() {
   });
 
   const user = useStore(userStore, (state) => state.user);
+  const hasHydrated = useStore(userStore, (state) => state.hasHydrated);
   const [appReady, setAppReady] = React.useState(false);
   const [loaded] = useFonts({
     Regular: require("../assets/fonts/Inter-Regular.ttf"),
@@ -37,7 +57,12 @@ export default function RootLayout() {
   });
 
   React.useEffect(() => {
-    if (!loaded) return;
+    // Wait for fonts AND the persisted session to finish loading back out
+    // of MMKV before deciding whether to show the login screen or the
+    // main app below - otherwise a logged-in person briefly reads as
+    // `user: null` on every cold start/reload and gets bounced to login
+    // even though their session was saved just fine.
+    if (!loaded || !hasHydrated) return;
 
     const timer = setTimeout(async () => {
       await SplashScreen.hideAsync();
@@ -45,7 +70,7 @@ export default function RootLayout() {
     }, SPLASH_MIN_MS);
 
     return () => clearTimeout(timer);
-  }, [loaded]);
+  }, [loaded, hasHydrated]);
 
   if (!appReady) {
     return <SplashView />;

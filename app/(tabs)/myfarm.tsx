@@ -170,7 +170,7 @@ const MyFarm = () => {
       <SegmentedContentPages storeKey="myFarm" options={TAB_OPTIONS}>
         <FarmDetails item={data} />
         <FarmProducts products={data} />
-        <SoilAirQuality />
+        <SoilAirQuality farmId={data?.id} />
         <Geofencing farm={data} />
       </SegmentedContentPages>
 

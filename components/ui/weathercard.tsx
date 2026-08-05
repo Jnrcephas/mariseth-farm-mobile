@@ -2,13 +2,12 @@ import { colors } from "@/constants/colors";
 import { largeScreen, weatherBackgrounds } from "@/constants/generalconstants";
 import { icons } from "@/constants/icons";
 import { endpoints } from "@/constants/endpoints";
-import { isBoundaryMissingError, useFarmWeather, useFetchQuery } from "@/hooks/usefetchquery";
+import { kelvinToCelsius, mpsToKph, useFarmWeather, useFetchQuery } from "@/hooks/usefetchquery";
 import { userStore } from "@/stores/userstore";
 import { getWeatherAssets } from "@/utils/commonmethods";
 import { format } from "date-fns";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import AppText from "./apptext";
@@ -66,15 +65,21 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
   // own farm here just to get its id. myfarm.tsx (variant="farm") already
   // has the farm loaded and passes farmId directly, so this is skipped
   // there via `enabled`.
-  const { data: ownFarm } = useFetchQuery(endpoints.myFarm, "myFarm", {
+  const { data: ownFarm } = useFetchQuery(endpoints.myFarm, "myfarm", {
     enabled: !farmIdOverride,
   });
   const farmId = farmIdOverride ?? ownFarm?.id;
 
+  console.log("[WeatherCard] farmId resolution", {
+    variant,
+    farmIdOverride,
+    ownFarmId: ownFarm?.id,
+    resolvedFarmId: farmId,
+  });
+
   const { data, isLoading, error } = useFarmWeather(farmId);
-  const boundaryMissing = isBoundaryMissingError(error);
   const showWeatherFallback =
-    (variant === "default" || variant === "home") && !!error && !boundaryMissing;
+    (variant === "default" || variant === "home") && !!error;
   const showToolbar =
     variant === "hero" || variant === "farm" || variant === "home";
 
@@ -89,10 +94,9 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
     );
   }
 
-  if (boundaryMissing) {
+  if (error && !showWeatherFallback) {
     return (
-      <Pressable
-        onPress={() => router.navigate("/myfarm/editfarmdetails")}
+      <View
         style={[
           styles.weatherSkeletonPlaceholder,
           {
@@ -103,52 +107,31 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
           },
         ]}
       >
-        <Image source={icons.location} style={{ height: 28, width: 28, marginBottom: 8 }} />
         <AppText
           fontFamily="SemiBold"
           fontSize={14}
           color="textPrimary"
           style={{ textAlign: "center" }}
         >
-          Set your farm&apos;s boundary to see weather
-        </AppText>
-        <AppText
-          fontFamily="Regular"
-          fontSize={12}
-          color="formPlaceholderText"
-          style={{ textAlign: "center", marginTop: 4 }}
-        >
-          Tap here to mark it on the map
-        </AppText>
-      </Pressable>
-    );
-  }
-
-  if (error && !showWeatherFallback) {
-    return (
-      <View
-        style={[
-          styles.weatherSkeletonPlaceholder,
-          {
-            backgroundColor: colors.skeletonPlaceholder,
-            justifyContent: "center",
-            alignItems: "center",
-          },
-        ]}
-      >
-        <AppText fontFamily="SemiBold" fontSize={16} color="textPrimary">
-          {error?.message}
+          Weather data isn&apos;t available for this farm right now.
         </AppText>
       </View>
     );
   }
 
-  const locationName = data?.location?.name ?? user?.farmer?.village ?? "Your Farm";
-  const temperature = data?.current?.temp_c ?? "--";
-  const conditionText = data?.current?.condition?.text ?? "Sunny";
-  const windKph = data?.current?.wind_kph ?? "--";
-  const pressureMb = data?.current?.pressure_mb ?? "--";
-  const humidity = data?.current?.humidity ?? "--";
+  const locationName = user?.farmer?.village ?? "Your Farm";
+  const temperature =
+    data?.temp != null ? Math.round(kelvinToCelsius(data.temp)) : "--";
+  const conditionText = data?.weather?.[0]?.description
+    ? data.weather[0].description.replace(/\b\w/g, (c) => c.toUpperCase())
+    : showWeatherFallback
+      ? "Weather unavailable"
+      : "Sunny";
+  const windKph =
+    data?.wind_speed != null ? Math.round(mpsToKph(data.wind_speed)) : "--";
+  const pressureMb = data?.pressure ?? "--";
+  const humidity = data?.humidity ?? "--";
+  const cloudCover = data?.clouds ?? "--";
   const { icon: weatherIcon, gradient: weatherGradient } =
     getWeatherAssets(conditionText);
   const icon =
@@ -160,12 +143,6 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
     variant === "default" || variant === "home"
       ? weatherBackgrounds.sunny
       : weatherGradient;
-  const chanceOfRain =
-    data?.forecast?.forecastday?.[0]?.day?.daily_chance_of_rain ?? "--";
-  const forecastDays = data?.forecast?.forecastday ?? [];
-  const severeAlert = data?.alerts?.alert?.[0];
-  const showForecastRow = variant === "home" && forecastDays.length > 0;
-  const showAlertBanner = variant === "home" && !!severeAlert;
 
   return (
     <LinearGradient
@@ -289,8 +266,8 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
         <View style={{ flexDirection: "column" }}>
           <WeatherCondition
             icon={icons.rainn}
-            description={"Chance of rain"}
-            metric={`${chanceOfRain}%`}
+            description={"Cloud Cover"}
+            metric={`${cloudCover}%`}
             marginBottom={20}
           />
 
@@ -301,44 +278,6 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
           />
         </View>
       </View>
-
-      {showAlertBanner ? (
-        <View style={styles.alertBanner}>
-          <AppText fontFamily="SemiBold" fontSize={13} color="white">
-            ⚠ {severeAlert?.event || "Severe Weather Alert"}
-          </AppText>
-          <AppText
-            fontFamily="Regular"
-            fontSize={12}
-            color="white"
-            numberOfLines={2}
-            style={{ marginTop: 2 }}
-          >
-            {severeAlert?.headline}
-          </AppText>
-        </View>
-      ) : null}
-
-      {showForecastRow ? (
-        <View style={styles.forecastRow}>
-          {forecastDays.map((day) => {
-            const { icon: dayIcon } = getWeatherAssets(
-              day?.day?.condition?.text ?? ""
-            );
-            return (
-              <View key={day.date} style={styles.forecastDay}>
-                <AppText fontFamily="Medium" fontSize={12} color="white">
-                  {format(new Date(day.date), "EEE")}
-                </AppText>
-                <Image source={dayIcon} style={styles.forecastIcon} />
-                <AppText fontFamily="SemiBold" fontSize={13} color="white">
-                  {Math.round(day?.day?.maxtemp_c)}° / {Math.round(day?.day?.mintemp_c)}°
-                </AppText>
-              </View>
-            );
-          })}
-        </View>
-      ) : null}
     </LinearGradient>
   );
 };

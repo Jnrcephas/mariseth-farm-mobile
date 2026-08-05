@@ -23,11 +23,11 @@ export const endpoints = {
   inputCredits: `${base}/credit/list-input-credits`,
 
 
-    // PRODUCTS - shared farm-management resource, same one the web app
+  // PRODUCTS - shared farm-management resource, same one the web app
   // uses (GET /api/v1/farm-management/product), so no consumer/mobile
   // prefix here.
   products: `farm-management/product`,
-  
+
   // FARMS ENDPOINTS
   myFarm: `${base}/farm/my-farm`,
 
@@ -53,11 +53,11 @@ export const endpoints = {
   // REGIONS
   regions: `regions`,
 
-  // WEATHER - farms need a `boundary` set (see myfarmers/addfarm.tsx and
-  // myfarm/editfarmdetails.tsx) before this returns anything for them.
-  weather: (farmId: number | string) => `weather/${farmId}`,
+  // WEATHER & SOIL QUALITY - resolved purely from the farm id server-side;
+  // no boundary is required (confirmed with backend - see mobile
+  // weather/soil-quality fix). Matches the same endpoints the admin web
+  // app uses under /api/v1/agro-monitoring/.
+  weather: (farmId: number | string) => `agro-monitoring/${farmId}/weather`,
+  soilQuality: (farmId: number | string) =>
+    `agro-monitoring/${farmId}/soil_quality`,
 };
-
-
-
-

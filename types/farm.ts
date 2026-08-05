@@ -43,8 +43,9 @@ export interface myFarm {
   region: region;
   district: district;
   size: number;
-  // Farms need this set before the weather endpoint (GET
-  // /api/v1/weather/{farm_id}) will return anything for them.
+  // Optional - only used for the Geofencing/asset-tracking feature.
+  // Weather and soil quality are resolved purely from the farm id and
+  // do not require this to be set.
   boundary?: farmBoundary | null;
   size_metric: {
     category_name: string;
