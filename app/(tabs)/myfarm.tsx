@@ -10,10 +10,10 @@ import {
 import SoilAirQuality from "@/components/ui/soilairquality";
 import SmallFarmerCard from "@/components/ui/smallfarmercard";
 import MyFarmSP from "@/components/ui/skeletonplaceholders/myfarm";
-import WeatherCard from "@/components/ui/weathercard";
 import { colors } from "@/constants/colors";
 import { endpoints } from "@/constants/endpoints";
-import { isIOS } from "@/constants/generalconstants";
+import { icons } from "@/constants/icons";
+import { isIOS, weatherBackgrounds } from "@/constants/generalconstants";
 // ASSUMPTION: placeholder key - point this at whatever your real
 // constants/images.ts exports for a farm/cornfield hero photo (or add
 // the uploaded photo there under this name).
@@ -24,6 +24,7 @@ import { userStore } from "@/stores/userstore";
 import { SegmentedControlValue } from "@/types/universal";
 import { isLeadFarmerUser, isSmallholderUser } from "@/utils/userroles";
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useStore } from "zustand";
@@ -42,13 +43,29 @@ const TAB_LABELS: Record<string, string> = {
   "Geofencing": "Geofence",
 };
 
-// Tabs that should show the live weather hero. Everything else (Farm
-// Details, Farm Products) shows a static farm photo instead, since
-// those screens don't need live weather context.
-const WEATHER_HERO_TABS: SegmentedControlValue<"myFarm">[] = [
-  "Soil & Air Quality",
-  "Geofencing",
-];
+// Each non-default tab gets its own hero "widget" - a gradient
+// placeholder with an icon and short label - instead of the live
+// weather card. Weather is Home-screen-only; showing it here read as
+// live conditions for whatever tab was open, which wasn't the intent
+// for Soil & Air Quality or Geofencing. Farm Details/Products fall
+// through to the static farm photo below since they don't need either.
+const WIDGET_HERO_CONFIG: Partial<
+  Record<
+    SegmentedControlValue<"myFarm">,
+    { icon: keyof typeof icons; gradient: keyof typeof weatherBackgrounds; label: string }
+  >
+> = {
+  "Soil & Air Quality": {
+    icon: "farm",
+    gradient: "thunderStorm",
+    label: "Soil & air quality snapshot",
+  },
+  "Geofencing": {
+    icon: "location",
+    gradient: "cloudy",
+    label: "Geofence map preview coming soon",
+  },
+};
 
 const MyFarm = () => {
   const user = useStore(userStore, (state) => state.user);
@@ -58,9 +75,7 @@ const MyFarm = () => {
   const selectedTab = useUniversalStore(
     (state) => state.selectedSegmentedOption.myFarm
   );
-  const showWeatherHero = WEATHER_HERO_TABS.includes(
-    selectedTab ?? TAB_OPTIONS[0]
-  );
+  const widgetHero = WIDGET_HERO_CONFIG[selectedTab ?? TAB_OPTIONS[0]];
 
   const { data, isLoading, error, refetch } = useFetchQuery(
     endpoints.myFarm,
@@ -132,10 +147,29 @@ const MyFarm = () => {
           isSmallholder && styles.heroSectionSmallholder,
         ]}
       >
-        {showWeatherHero ? (
+        {widgetHero ? (
           <View style={styles.weatherWrapper}>
-            <WeatherCard variant="farm" farmId={data?.id} />
-            <View style={styles.farmTitleOverlayTop}>
+            <LinearGradient
+              colors={weatherBackgrounds[widgetHero.gradient].colors as any}
+              start={weatherBackgrounds[widgetHero.gradient].start}
+              end={weatherBackgrounds[widgetHero.gradient].end}
+              style={styles.mapHeroPlaceholder}
+            >
+              <Image
+                source={icons[widgetHero.icon]}
+                style={{ width: 32, height: 32 }}
+                tintColor={colors.white}
+              />
+              <AppText
+                fontFamily="Medium"
+                fontSize={13}
+                color="white"
+                style={{ marginTop: 8, textAlign: "center", opacity: 0.85 }}
+              >
+                {widgetHero.label}
+              </AppText>
+            </LinearGradient>
+            <View style={styles.farmTitleOverlayBottom}>
               <AppText fontFamily="Bold" fontSize={20} color="white">
                 {data?.name}
               </AppText>
@@ -214,12 +248,12 @@ const styles = StyleSheet.create({
     height: 220,
     borderRadius: 16,
   },
-  farmTitleOverlayTop: {
-    position: "absolute",
-    left: 25,
-    top: 118,
-    right: 16,
-    gap: 3,
+  mapHeroPlaceholder: {
+    width: "100%",
+    height: 220,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
   },
   farmTitleOverlayBottom: {
     position: "absolute",

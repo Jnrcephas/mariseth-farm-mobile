@@ -30,6 +30,9 @@ const appConfig: Record<string, AppVariantConfig> = {
 };
 const app = appConfig[appVariant] || appConfig.production;
 
+const locationUsageDescription =
+  "Mariseth Farms uses your location to help you mark your farm's boundary on the map and to power location-based features.";
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: app?.name,
@@ -50,6 +53,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       tinted: "./assets/images/appicons/ios-dark.png",
     },
     infoPlist: {
+      NSLocationWhenInUseUsageDescription: locationUsageDescription,
+      NSLocationAlwaysAndWhenInUseUsageDescription: locationUsageDescription,
       NSAppTransportSecurity: {
         NSAllowsArbitraryLoads: false,
         NSExceptionDomains: {
@@ -105,6 +110,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           useFrameworks: "static",
           deploymentTarget: "16.0",
         },
+      },
+    ],
+    [
+      "expo-location",
+      {
+        locationAlwaysAndWhenInUsePermission: locationUsageDescription,
+        locationWhenInUsePermission: locationUsageDescription,
       },
     ],
     "expo-font",

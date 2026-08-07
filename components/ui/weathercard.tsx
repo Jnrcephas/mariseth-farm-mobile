@@ -52,11 +52,22 @@ const WeatherCondition: React.FC<weatherCondition> = ({
 interface WeatherCardProps {
   variant?: "default" | "hero" | "farm" | "home";
   farmId?: number | string;
+  // When provided (e.g. from myfarm.tsx), these render as the card's
+  // title in place of the user's village. This replaces the old
+  // pattern of absolutely-positioning the farm name on top of the
+  // card from outside - that collided with the icon/temperature since
+  // this card's internal layout can change height (loading/error
+  // states, variant differences) in ways an external overlay can't
+  // account for.
+  farmName?: string;
+  farmSubtitle?: string;
 }
 
 const WeatherCard: React.FC<WeatherCardProps> = ({
   variant = "default",
   farmId: farmIdOverride,
+  farmName,
+  farmSubtitle,
 }) => {
   const weatherIconSize = largeScreen ? 133 : 113;
   const { user } = userStore.getState();
@@ -119,7 +130,7 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
     );
   }
 
-  const locationName = user?.farmer?.village ?? "Your Farm";
+  const locationName = farmName || (user?.farmer?.village ?? "Your Farm");
   const temperature =
     data?.temp != null ? Math.round(kelvinToCelsius(data.temp)) : "--";
   const conditionText = data?.weather?.[0]?.description
@@ -165,6 +176,16 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
           >
             {locationName}
           </AppText>
+          {farmSubtitle ? (
+            <AppText
+              fontFamily="Medium"
+              fontSize={12}
+              color="white"
+              style={{ textAlign: "center", opacity: 0.85, marginTop: 2 }}
+            >
+              {farmSubtitle}
+            </AppText>
+          ) : null}
         </View>
       ) : (
         <View style={styles.weatherToolbar}>
@@ -183,6 +204,16 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
             >
               {locationName}
             </AppText>
+            {farmSubtitle ? (
+              <AppText
+                fontFamily="Medium"
+                fontSize={12}
+                color="white"
+                style={{ textAlign: "center", opacity: 0.85, marginTop: 2 }}
+              >
+                {farmSubtitle}
+              </AppText>
+            ) : null}
             <View style={styles.weatherDots}>
               <View style={[styles.weatherDot, styles.weatherDotActive]} />
               <View style={styles.weatherDot} />
