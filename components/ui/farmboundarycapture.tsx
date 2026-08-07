@@ -125,7 +125,7 @@ const FarmBoundaryCapture = ({
   };
 
   return (
-    <View style={{ gap: 10 }}>
+    <View style={styles.container}>
       <AppText fontFamily="Regular" fontSize={12} color="formPlaceholderText">
         Walk to each corner of the farm and tap &quot;Mark this point&quot; while standing there, or enter coordinates directly below if you already have them. Mark at least 3 points. Farms need a boundary set to receive weather data.
       </AppText>
@@ -275,6 +275,13 @@ const FarmBoundaryCapture = ({
 export default FarmBoundaryCapture;
 
 const styles = StyleSheet.create({
+  container: {
+    gap: 10,
+    // Extra breathing room at the bottom so the "Paste list" /
+    // "Add point manually" buttons never sit flush against whatever
+    // follows this component (e.g. a floating footer button).
+    paddingBottom: 24,
+  },
   pointsList: {
     borderWidth: 1,
     borderColor: colors.light,

@@ -3,7 +3,7 @@ import { booleanOptions } from "@/constants/generalconstants";
 import { userStore } from "@/stores/userstore";
 import { smallHolder } from "@/types/farmers";
 import { FormikProps } from "formik";
-import React from "react";
+import React, { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -41,6 +41,11 @@ const FarmForm: React.FC<farmFormProps> = ({
   const isAddMode = type === "add";
   const isMyFarmer = formik.values.apply_for === "my_farmer";
 
+  // Measured height of the absolutely-positioned footer, so the scroll
+  // content can reserve exactly enough space and nothing ends up hidden
+  // underneath it. Starts with a reasonable fallback before first layout.
+  const [footerHeight, setFooterHeight] = useState(120);
+
   const regions = userStore((state) => state.regions);
   const metrics = userStore.getState().metrics;
   const farmProducts = userStore.getState().farmProducts;
@@ -76,6 +81,7 @@ const FarmForm: React.FC<farmFormProps> = ({
         style={styles.scrollView}
         contentContainerStyle={[
           styles.scrollContent,
+          { paddingBottom: Math.max(footerHeight + 60, 240) },
           isAddMode && styles.addScrollContent,
         ]}
       >
@@ -302,7 +308,7 @@ const FarmForm: React.FC<farmFormProps> = ({
           />
         </View>
 
-        <View style={styles.formSection}>
+        <View style={[styles.formSection, { marginBottom: 60 }]}>
           <AppText fontFamily="SemiBold" fontSize={16} color="black" style={{ marginBottom: 4 }}>
             Farm Boundary (Optional)
           </AppText>
@@ -351,7 +357,10 @@ const FarmForm: React.FC<farmFormProps> = ({
         ) : null}
       </KeyboardAwareScrollView>
 
-      <View style={[styles.footer, { paddingBottom: bottomInset + 23 }]}>
+      <View
+        style={[styles.footer, { paddingBottom: bottomInset + 23 }]}
+        onLayout={(e) => setFooterHeight(e.nativeEvent.layout.height)}
+      >
         <AppButton
           title={isAddMode ? "Add Farm" : "Save Changes"}
           textColor="white"
@@ -379,7 +388,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: 120,
+    // paddingBottom is set dynamically inline based on measured footer height
   },
   addScrollContent: {
     gap: 32,
