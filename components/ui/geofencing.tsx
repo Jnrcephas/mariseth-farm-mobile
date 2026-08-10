@@ -10,6 +10,7 @@ import { Image } from "expo-image";
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import AppText from "./apptext";
+import BoundaryPreview from "../boundarypreview";
 
 // Boundary status used to be inferred from the weather endpoint's error
 // (via isBoundaryMissingError), on the assumption that weather required
@@ -20,13 +21,10 @@ import AppText from "./apptext";
 // hooks/usefetchquery.ts and constants/endpoints.ts for the fix.
 //
 // This now reads `farm.boundary` directly off the farm object instead,
-// the same way the admin web app's Geofencing tab does. OPEN QUESTION:
-// confirm with backend that `boundary` is actually included on the
-// GET my-farm / lead-farmer farm responses after being saved (the admin
-// web app hit a real gap here - PUT accepted `boundary` in the request
-// body but didn't echo/persist it back on farm reads). If that's also
-// true here, this will show "No boundary set" even after saving one
-// until that's fixed server-side.
+// the same way the admin web app's Geofencing tab does. CONFIRMED with
+// backend (2026-08-10): `boundary` is now included on the GET my-farm /
+// lead-farmer farm responses after being saved, so `hasValidBoundary`
+// below reflects real state again.
 interface GeofencingProps {
   farm?: myFarm;
 }
@@ -75,21 +73,27 @@ const Geofencing: React.FC<GeofencingProps> = ({ farm }) => {
         </View>
       </View>
 
-      <View style={styles.mapPlaceholder}>
-        <Image
-          source={icons.location}
-          style={{ width: 32, height: 32 }}
-          tintColor={colors.light}
-        />
-        <AppText
-          fontFamily="Medium"
-          fontSize={13}
-          color="formPlaceholderText"
-          style={{ marginTop: 8, textAlign: "center", paddingHorizontal: 24 }}
-        >
-          Map preview coming soon
-        </AppText>
-      </View>
+      {hasBoundary ? (
+        <View style={styles.mapPreviewCard}>
+          <BoundaryPreview boundary={farm?.boundary} height={160} />
+        </View>
+      ) : (
+        <View style={styles.mapPlaceholder}>
+          <Image
+            source={icons.location}
+            style={{ width: 32, height: 32 }}
+            tintColor={colors.light}
+          />
+          <AppText
+            fontFamily="Medium"
+            fontSize={13}
+            color="formPlaceholderText"
+            style={{ marginTop: 8, textAlign: "center", paddingHorizontal: 24 }}
+          >
+            No boundary marked yet
+          </AppText>
+        </View>
+      )}
 
       {canEdit ? (
         <Pressable style={styles.actionButton} onPress={handleManageBoundary}>
@@ -135,6 +139,14 @@ const styles = StyleSheet.create({
     borderStyle: "dashed",
     justifyContent: "center",
     alignItems: "center",
+  },
+  mapPreviewCard: {
+    height: 160,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.light,
+    backgroundColor: colors.backgroundTertiary,
+    overflow: "hidden",
   },
   actionButton: {
     height: 48,
