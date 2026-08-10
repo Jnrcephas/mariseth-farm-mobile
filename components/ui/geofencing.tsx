@@ -4,7 +4,7 @@ import { width } from "@/constants/generalconstants";
 import { myFarm } from "@/types/farm";
 import { userStore } from "@/stores/userstore";
 import { canEditOwnFarm } from "@/utils/userroles";
-import { dataEncoder } from "@/utils/commonmethods";
+import { hasValidBoundary } from "./farmboundarycapture";
 import { router } from "expo-router";
 import { Image } from "expo-image";
 import React from "react";
@@ -35,16 +35,10 @@ const Geofencing: React.FC<GeofencingProps> = ({ farm }) => {
   const user = userStore((state) => state.user);
   const canEdit = canEditOwnFarm(user);
 
-  const hasBoundary = !!farm?.boundary;
+  const hasBoundary = hasValidBoundary(farm?.boundary);
 
   const handleManageBoundary = () => {
-    // EditFarmDetails reads the farm via the `data` query param
-    // (see FarmDetails' edit button for the same pattern) and decodes
-    // it with dataDecoder. Without this, params.data is undefined,
-    // decodeURIComponent(undefined) becomes the string "undefined",
-    // and JSON.parse blows up with "Unexpected character: u".
-    if (!farm) return;
-    router.navigate(`/myfarm/editfarmdetails?data=${dataEncoder(farm)}`);
+    router.navigate("/myfarm/editfarmdetails");
   };
 
   const statusIcon = hasBoundary ? colors.primary : colors.error;
@@ -81,6 +75,22 @@ const Geofencing: React.FC<GeofencingProps> = ({ farm }) => {
         </View>
       </View>
 
+      <View style={styles.mapPlaceholder}>
+        <Image
+          source={icons.location}
+          style={{ width: 32, height: 32 }}
+          tintColor={colors.light}
+        />
+        <AppText
+          fontFamily="Medium"
+          fontSize={13}
+          color="formPlaceholderText"
+          style={{ marginTop: 8, textAlign: "center", paddingHorizontal: 24 }}
+        >
+          Map preview coming soon
+        </AppText>
+      </View>
+
       {canEdit ? (
         <Pressable style={styles.actionButton} onPress={handleManageBoundary}>
           <AppText fontFamily="SemiBold" fontSize={14} color="white">
@@ -114,6 +124,15 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  mapPlaceholder: {
+    height: 160,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.light,
+    borderStyle: "dashed",
     justifyContent: "center",
     alignItems: "center",
   },
