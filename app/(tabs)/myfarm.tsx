@@ -3,6 +3,7 @@ import ErrorComponent from "@/components/ui/errorcomponent";
 import FarmDetails from "@/components/ui/farmdetails";
 import FarmProducts from "@/components/ui/farmproducts";
 import Geofencing from "@/components/ui/geofencing";
+import { hasValidBoundary } from "@/components/ui/farmboundarycapture";
 import {
   SegmentedContentPages,
   SegmentedTabBar,
@@ -63,7 +64,7 @@ const WIDGET_HERO_CONFIG: Partial<
   "Geofencing": {
     icon: "location",
     gradient: "cloudy",
-    label: "Geofence map preview coming soon",
+    label: "Farm boundary",
   },
 };
 
@@ -81,6 +82,15 @@ const MyFarm = () => {
     endpoints.myFarm,
     "myfarm"
   );
+
+  // Reflect real boundary state instead of a static "coming soon" label -
+  // `data.boundary` now comes back populated from the backend once saved.
+  const geofencingHeroLabel =
+    selectedTab === "Geofencing"
+      ? hasValidBoundary(data?.boundary)
+        ? "Boundary mapped"
+        : "No boundary set yet"
+      : widgetHero?.label;
 
   const {
     data: farmersData,
@@ -166,7 +176,7 @@ const MyFarm = () => {
                 color="white"
                 style={{ marginTop: 8, textAlign: "center", opacity: 0.85 }}
               >
-                {widgetHero.label}
+                {geofencingHeroLabel}
               </AppText>
             </LinearGradient>
             <View style={styles.farmTitleOverlayBottom}>
