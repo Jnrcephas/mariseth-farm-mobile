@@ -63,7 +63,7 @@ const WIDGET_HERO_CONFIG: Partial<
   "Geofencing": {
     icon: "location",
     gradient: "cloudy",
-    label: "Geofence map preview coming soon",
+    label: "",
   },
 };
 
