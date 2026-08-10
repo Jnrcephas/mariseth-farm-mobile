@@ -33,6 +33,23 @@ export function geoJSONToPoints(boundary?: {
   return openRing.map(([lng, lat]) => ({ latitude: lat, longitude: lng }));
 }
 
+// The backend returns `boundary` as `{}` (an empty object) rather than
+// null/undefined for farms that have never had one drawn. A plain
+// `!!farm.boundary` truthiness check treats `{}` as "has a boundary"
+// since empty objects are truthy in JS - use this instead anywhere
+// "is this farm's boundary actually configured?" matters.
+export function hasValidBoundary(boundary?: {
+  type?: string;
+  coordinates?: [number, number][][];
+} | null): boolean {
+  return (
+    !!boundary &&
+    boundary.type === "Polygon" &&
+    Array.isArray(boundary.coordinates?.[0]) &&
+    (boundary.coordinates?.[0]?.length ?? 0) > 0
+  );
+}
+
 // Accepts lines like "5.651200, -0.149850" (latitude then longitude,
 // matching how points are stored/displayed here - not GeoJSON order).
 // Skips lines that don't parse rather than failing the whole paste.
@@ -125,7 +142,7 @@ const FarmBoundaryCapture = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={{ gap: 10 }}>
       <AppText fontFamily="Regular" fontSize={12} color="formPlaceholderText">
         Walk to each corner of the farm and tap &quot;Mark this point&quot; while standing there, or enter coordinates directly below if you already have them. Mark at least 3 points. Farms need a boundary set to receive weather data.
       </AppText>
@@ -275,13 +292,6 @@ const FarmBoundaryCapture = ({
 export default FarmBoundaryCapture;
 
 const styles = StyleSheet.create({
-  container: {
-    gap: 10,
-    // Extra breathing room at the bottom so the "Paste list" /
-    // "Add point manually" buttons never sit flush against whatever
-    // follows this component (e.g. a floating footer button).
-    paddingBottom: 24,
-  },
   pointsList: {
     borderWidth: 1,
     borderColor: colors.light,
