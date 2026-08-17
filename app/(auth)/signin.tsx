@@ -42,8 +42,6 @@ const SignIn = () => {
     {}
   );
 
-  const buttonAreaHeight = bottomInset + 88;
-
   useEffect(() => {
     const showEvent =
       Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
@@ -131,7 +129,7 @@ const SignIn = () => {
             authStyles.container,
             styles.scrollContent,
             {
-              paddingBottom: buttonAreaHeight + keyboardHeight,
+              paddingBottom: bottomInset + 40 + keyboardHeight,
             },
           ]}
           keyboardShouldPersistTaps="always"
@@ -251,10 +249,7 @@ const SignIn = () => {
             Sign up
           </AppText>
         </Pressable>
-        </ScrollView>
-      </KeyboardAvoidingView>
 
-      <View style={[authStyles.buttonContainer, { bottom: bottomInset + 20 }]}>
         <AppButton
           title="Sign in"
           textColor="white"
@@ -262,11 +257,12 @@ const SignIn = () => {
           height={48}
           borderRadius={8}
           fontSize={16}
-          style={authStyles.authButton}
+          style={{ marginTop: 24 }}
           onPress={handleSubmit}
           disabled={isLoading || !phoneNumber || !pin}
         />
-      </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </>
   );
 };
