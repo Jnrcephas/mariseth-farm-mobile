@@ -4,13 +4,16 @@ import { width } from "@/constants/generalconstants";
 import { myFarm } from "@/types/farm";
 import { userStore } from "@/stores/userstore";
 import { canEditOwnFarm } from "@/utils/userroles";
+import { dataEncoder } from "@/utils/commonmethods";
 import { hasValidBoundary } from "./farmboundarycapture";
+
 import { router } from "expo-router";
 import { Image } from "expo-image";
 import React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 import AppText from "./apptext";
 import BoundaryPreview from "../boundarypreview";
+import BoundaryMapView from "../boundarymapview";
 
 // Boundary status used to be inferred from the weather endpoint's error
 // (via isBoundaryMissingError), on the assumption that weather required
@@ -36,7 +39,13 @@ const Geofencing: React.FC<GeofencingProps> = ({ farm }) => {
   const hasBoundary = hasValidBoundary(farm?.boundary);
 
   const handleManageBoundary = () => {
-    router.navigate("/myfarm/editfarmdetails");
+    // editfarmdetails reads the farm off the `data` route param (see
+    // farmdetails.tsx's own "Edit" button for the same pattern) - it
+    // doesn't fetch its own copy. Navigating here without it used to
+    // crash the screen: dataDecoder(undefined) -> JSON.parse("undefined")
+    // throws before the form even mounts.
+    if (!farm) return;
+    router.navigate(`/myfarm/editfarmdetails?data=${dataEncoder(farm)}`);
   };
 
   const statusIcon = hasBoundary ? colors.primary : colors.error;
@@ -75,7 +84,13 @@ const Geofencing: React.FC<GeofencingProps> = ({ farm }) => {
 
       {hasBoundary ? (
         <View style={styles.mapPreviewCard}>
-          <BoundaryPreview boundary={farm?.boundary} height={160} />
+          {Platform.OS === "web" ? (
+            // react-native-maps isn't usable on this project's static web
+            // export - fall back to the flat SVG shape preview there.
+            <BoundaryPreview boundary={farm?.boundary} height={220} />
+          ) : (
+            <BoundaryMapView boundary={farm?.boundary} height={220} />
+          )}
         </View>
       ) : (
         <View style={styles.mapPlaceholder}>
@@ -141,7 +156,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   mapPreviewCard: {
-    height: 160,
+    height: 220,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.light,

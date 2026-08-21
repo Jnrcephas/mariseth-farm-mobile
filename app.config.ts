@@ -76,6 +76,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     package: app?.bundleIdAndroid,
     version: "1.0.0",
     versionCode: 1,
+    // react-native-maps uses Google Maps on Android (Apple Maps on iOS
+    // needs no key, so nothing added under `ios` for that). Add
+    // GOOGLE_MAPS_API_KEY_ANDROID to .env.dev / .env.prod - an Android
+    // "Maps SDK for Android" key from Google Cloud Console, restricted
+    // to this app's package name + SHA-1. Required for release builds;
+    // without it the map renders blank/grey tiles.
+    config: {
+      googleMaps: {
+        apiKey: process.env.GOOGLE_MAPS_API_KEY_ANDROID,
+      },
+    },
   },
   web: {
     bundler: "metro",
