@@ -259,7 +259,10 @@ export const addFarmSchema = yup.object().shape({
   size: yup
     .string()
     .required("Total Land Size is required")
-    .matches(/^\d+$/, "Total Land Size must be a number"),
+    .matches(
+      /^\d+(\.\d+)?$/,
+      "Total Land Size must be a number"
+    ),
 
   size_metric: yup.string(),
 
@@ -301,7 +304,10 @@ export const adddFarmerSchema = yup.object().shape({
   size: yup
     .string()
     .required("Total Land Size is required")
-    .matches(/^\d+$/, "Total Land Size must be a number"),
+    .matches(
+      /^\d+(\.\d+)?$/,
+      "Total Land Size must be a number"
+    ),
 
   size_metric: yup.string(),
 
