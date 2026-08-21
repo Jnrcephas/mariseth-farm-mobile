@@ -44,8 +44,17 @@ export function dataEncoder<T>(data: T) {
   return encodeURIComponent(JSON.stringify(data));
 }
 
-export function dataDecoder(data: string) {
-  return JSON.parse(decodeURIComponent(data));
+export function dataDecoder(data?: string) {
+  // Guards the case a screen is navigated to without its expected `data`
+  // param (e.g. a Link/onPress that forgot to encode it) - without this,
+  // JSON.parse("undefined") throws and crashes the screen before it can
+  // render anything, including a useful error message.
+  if (!data) return undefined;
+  try {
+    return JSON.parse(decodeURIComponent(data));
+  } catch {
+    return undefined;
+  }
 }
 
 export function getWeatherAssets(description: string) {

@@ -1,4 +1,5 @@
 import FarmForm from "@/components/ui/farmform";
+import ErrorComponent from "@/components/ui/errorcomponent";
 import { pointsToGeoJSON, geoJSONToPoints } from "@/components/ui/farmboundarycapture";
 import { endpoints } from "@/constants/endpoints";
 import useAuthMutation from "@/hooks/usemutation";
@@ -16,7 +17,7 @@ import { useToast } from "react-native-toast-notifications";
 
 const EditFarmDetails = () => {
   const params = useLocalSearchParams<{ data: string }>();
-  const farmData: myFarm1 = dataDecoder(params?.data);
+  const farmData: myFarm1 | undefined = dataDecoder(params?.data);
 
   // console.log("Farm Data:", params?.data);
   const user = userStore((state) => state.user);
@@ -37,10 +38,10 @@ const EditFarmDetails = () => {
     irrigation,
     size_metric,
     boundary,
-  } = farmData;
+  } = farmData || ({} as Partial<myFarm1>);
 
-  const newCrops = crops.map((crop) => crop?.product?.id);
-  const newLivestock = livestock.map((crop) => crop?.product?.id);
+  const newCrops = (crops || []).map((crop) => crop?.product?.id);
+  const newLivestock = (livestock || []).map((crop) => crop?.product?.id);
 
   const toast = useToast();
 
@@ -75,7 +76,7 @@ const EditFarmDetails = () => {
       location: location || "",
       region: region?.id || "",
       district: district?.id || "",
-      size: size.toString() || "",
+      size: size?.toString() || "",
       size_metric: size_metric?.id,
       land_ownership: land_ownership || "",
       crops: newCrops || [],
@@ -113,6 +114,26 @@ const EditFarmDetails = () => {
       [],
     [formik.values.region]
   );
+
+  // Belt-and-braces: this screen only knows how to render a farm it was
+  // handed via the `data` route param (see farmdetails.tsx's "Edit"
+  // button, and geofencing.tsx's "Edit/Set Farm Boundary" button, for how
+  // callers are meant to navigate here). If that param is ever missing
+  // or malformed, show a recoverable screen instead of the blank crash
+  // this used to be - the hooks above still run unconditionally on every
+  // render either way, so this check happens at the very end, at render
+  // time, rather than as an early return.
+  if (!farmData) {
+    return (
+      <ErrorComponent
+        type="CLIENT_ERROR"
+        title="Couldn't load farm details"
+        message="We couldn't load this farm's details to edit. Please go back and try again."
+        btnTitle="Go Back"
+        refetch={() => router.back()}
+      />
+    );
+  }
 
   return (
     <FarmForm
