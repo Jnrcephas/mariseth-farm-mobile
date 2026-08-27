@@ -7,7 +7,17 @@ import {
 } from "@/hooks/usefetchquery";
 import { userStore } from "@/stores/userstore";
 import { tabbarScreenOptions, tabScreenOptions } from "@/utils/layoutmethods";
-import { isAdminUser, isLeadFarmerUser, isSmallholderUser, shouldShowFarmerHomeHeader, shouldShowLeadFarmerHome } from "@/utils/userroles";
+import {
+  canManageFarmersAndFarms,
+  isAdminUser,
+  isFieldOfficerExperience,
+  isFieldOfficerUser,
+  isLeadFarmerUser,
+  isSmallholderUser,
+  shouldShowFarmerHomeHeader,
+  shouldShowFieldOfficerHomeHeader,
+  shouldShowLeadFarmerHome,
+} from "@/utils/userroles";
 import { UseQueryOptions } from "@tanstack/react-query";
 import { BlurView } from "expo-blur";
 import { Tabs } from "expo-router";
@@ -23,14 +33,27 @@ export default function TabsLayout() {
   const isAdmin = isAdminUser(user);
   const isLeaderFarmer = isLeadFarmerUser(user);
   const isSmallholder = isSmallholderUser(user);
+  const isFieldOfficer = isFieldOfficerUser(user);
   const showLeadFarmerHome = shouldShowLeadFarmerHome(user);
   const showFarmerHomeHeader = shouldShowFarmerHomeHeader(user);
+  const showFieldOfficerHomeHeader = shouldShowFieldOfficerHomeHeader(user);
+  // The backend doesn't issue a distinct field-officer credential - field
+  // officers just log in with admin accounts - so admin and field officer
+  // share one mobile experience: onboarding-focused Home cards, "My
+  // Farmers" tab, and no Credits/My Farm/Finance (see isFieldOfficerExperience).
+  const isFieldOfficerUI = isFieldOfficerExperience(user);
+  // Field officers aren't farmers themselves - they have no farm/credit of
+  // their own - so "My Farmers" (onboarding) is the only farm-management
+  // surface that applies to them; Credits and My Farm assume farm ownership.
+  const canManageFarmers = canManageFarmersAndFarms(user);
   const tabRoleOptions = {
     isAdmin,
     isLeaderFarmer,
     isSmallholder,
+    isFieldOfficer,
     showLeadFarmerHome,
     showFarmerHomeHeader,
+    showFieldOfficerHomeHeader,
   };
 
   const regions = userStore((state) => state.regions);
@@ -188,19 +211,29 @@ export default function TabsLayout() {
       />
       <Tabs.Screen
         name="credits"
-        options={tabScreenOptions("Credits", tabRoleOptions)}
+        options={{
+          ...tabScreenOptions("Credits", tabRoleOptions),
+          // Credits are tied to a farmer's own farm; the field-officer
+          // experience (now including admin - see isFieldOfficerUI above)
+          // doesn't apply here.
+          ...(isFieldOfficerUI ? { href: null } : {}),
+        }}
         // listeners={listener()}
       />
       <Tabs.Screen
         name="myfarm"
-        options={tabScreenOptions("My Farm", tabRoleOptions)}
+        options={{
+          ...tabScreenOptions("My Farm", tabRoleOptions),
+          // Same reasoning as Credits above - no farm of their own to show.
+          ...(isFieldOfficerUI ? { href: null } : {}),
+        }}
         // listeners={listener()}
       />
       <Tabs.Screen
         name="myfarmers"
         options={{
           ...tabScreenOptions("My Farmers", tabRoleOptions),
-          ...(showLeadFarmerHome || isAdmin ? {} : { href: null }),
+          ...(canManageFarmers ? {} : { href: null }),
         }}
         // listeners={listener()}
       />
@@ -208,7 +241,12 @@ export default function TabsLayout() {
         name="finance"
         options={{
           ...tabScreenOptions("Finance", tabRoleOptions),
-          ...(isAdmin ? {} : { href: null }),
+          // Admin credentials are now also used for field officers (see
+          // isFieldOfficerUI), and Finance isn't part of that experience,
+          // so this is unreachable for now. Left in place - rather than
+          // deleted - for whenever a distinct back-office admin login
+          // exists again.
+          href: null,
         }}
       />
       <Tabs.Screen

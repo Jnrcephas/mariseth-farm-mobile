@@ -26,6 +26,10 @@ interface farmFormProps {
   type?: "add" | "edit";
   districts: { id: number; name: string }[];
   isLeaderFarmer?: boolean;
+  /** Field officers always assign the farm to a farmer they've onboarded -
+   * they have no farm of their own, so they get the farmer picker below
+   * but never the "myself" vs "my farmer" toggle (see isLeaderFarmer). */
+  isFieldOfficer?: boolean;
   recentlyAddedFarmers?: smallHolder[];
 }
 
@@ -35,11 +39,13 @@ const FarmForm: React.FC<farmFormProps> = ({
   type = "edit",
   districts,
   isLeaderFarmer = false,
+  isFieldOfficer = false,
   recentlyAddedFarmers = [],
 }) => {
   const bottomInset = useSafeAreaInsets().bottom;
   const isAddMode = type === "add";
   const isMyFarmer = formik.values.apply_for === "my_farmer";
+  const canPickFarmer = isLeaderFarmer || isFieldOfficer;
 
   // Measured height of the absolutely-positioned footer, so the scroll
   // content can reserve exactly enough space and nothing ends up hidden
@@ -328,7 +334,7 @@ const FarmForm: React.FC<farmFormProps> = ({
           />
         </View>
 
-        {isAddMode && isLeaderFarmer && recentlyAddedFarmers.length > 0 ? (
+        {isAddMode && canPickFarmer && recentlyAddedFarmers.length > 0 ? (
           <View style={styles.recentlyAddedSection}>
             <AppText fontFamily="SemiBold" fontSize={16} color="black">
               Recently Added

@@ -1,8 +1,7 @@
 import AppText from "@/components/ui/apptext";
-import AdminHomeHeader from "@/components/ui/adminhomeheader";
+import FarmCard from "@/components/ui/farmcard";
 import FarmerCard from "@/components/ui/farmercard";
 import HomeActiveCreditCard from "@/components/ui/homeactivecreditcard";
-import HomeHeroBackground from "@/components/ui/homeherobackground";
 import HomeRecentItemCard from "@/components/ui/homerecentitemcard";
 import QuickActionButton from "@/components/ui/quickactionbutton";
 import SmallFarmerCard from "@/components/ui/smallfarmercard";
@@ -13,10 +12,11 @@ import { isIOS } from "@/constants/generalconstants";
 import { usePaginatedInfiniteQuery } from "@/hooks/usefetchquery";
 import { userStore } from "@/stores/userstore";
 import {
-  isAdminUser,
+  isFieldOfficerExperience,
   isSmallholderUser,
   shouldShowLeadFarmerHome,
 } from "@/utils/userroles";
+import { differenceInDays, parseISO } from "date-fns";
 import { router } from "expo-router";
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
@@ -31,20 +31,47 @@ const formatCreditAmount = (amount?: string | number | null) => {
   });
 };
 
+const isRecentlyAddedFarm = (farm: any) => {
+  if (!farm?.date_created) return false;
+  return differenceInDays(new Date(), parseISO(farm.date_created)) < 14;
+};
+
 const Index = () => {
   const user = userStore((state) => state.user);
-  const isAdmin = isAdminUser(user);
   const isSmallholder = isSmallholderUser(user);
   const isLeaderFarmer = shouldShowLeadFarmerHome(user);
+  // Backend reuses admin credentials for field officers rather than issuing
+  // a distinct user_type, so admin and field officer share one Home view -
+  // see isFieldOfficerExperience in utils/userroles.ts.
+  const isFieldOfficer = isFieldOfficerExperience(user);
 
-  const { data, isLoading, isError, items } = usePaginatedInfiniteQuery<any>(
+  const {
+    data,
+    isLoading,
+    isError,
+    items,
+  } = usePaginatedInfiniteQuery<any>(
     endpoints.myFarmers,
     "smallholders",
     {
       page_size: 10,
       query: "",
     },
-    { enabled: isLeaderFarmer }
+    { enabled: isLeaderFarmer || isFieldOfficer }
+  );
+
+  const {
+    items: farmItems,
+    isLoading: isFarmsLoading,
+    isError: isFarmsError,
+  } = usePaginatedInfiniteQuery<any>(
+    endpoints.leadFarmersFarms,
+    "leadfarmersfarms",
+    {
+      page_size: 10,
+      query: "",
+    },
+    { enabled: isFieldOfficer }
   );
 
   const { items: creditHistoryItems } = usePaginatedInfiniteQuery<any>(
@@ -61,27 +88,93 @@ const Index = () => {
     ? 0
     : data?.pages?.[0]?.pagination?.total ?? items?.length ?? 0;
 
+  const farmCount = isFarmsError ? 0 : farmItems?.length ?? 0;
+
   const recentlyAddedFarmers =
-    isLeaderFarmer && farmerCount > 0 ? items?.slice(0, 5) ?? [] : [];
+    (isLeaderFarmer || isFieldOfficer) && farmerCount > 0
+      ? items?.slice(0, 5) ?? []
+      : [];
+
+  const recentlyAddedFarms = isFieldOfficer
+    ? (farmItems ?? []).filter(isRecentlyAddedFarm).slice(0, 5)
+    : [];
 
   const recentlyAddedCredits =
     isSmallholder && creditHistoryItems.length > 0
       ? creditHistoryItems.slice(0, 5)
       : [];
 
-  if (isAdmin) {
+  if (isFieldOfficer) {
     return (
       <ScrollView
-        style={styles.adminScreen}
-        contentContainerStyle={styles.adminScrollContent}
+        style={{ flex: 1, backgroundColor: colors.backgroundPrimary }}
+        contentContainerStyle={styles.scrollContent}
       >
-        <HomeHeroBackground>
-          <AdminHomeHeader />
-        </HomeHeroBackground>
-
-        <View style={styles.adminWeatherSection}>
-          <WeatherCard variant="hero" />
+        <View style={styles.homeSection}>
+          <View style={styles.quickActionsBlock}>
+            <AppText fontFamily="SemiBold" fontSize={16} color="black">
+              Quick Actions
+            </AppText>
+            <View style={styles.quickActionsContainer}>
+              <QuickActionButton type="farmer" width="47%" />
+              <QuickActionButton type="farm" width="47%" />
+            </View>
+          </View>
         </View>
+
+        <View style={styles.cardsSection}>
+          <FarmerCard
+            type="big"
+            title="Farmers"
+            icon="farmers"
+            onPress={() => router.navigate("/myfarmers")}
+            isLoading={isLoading}
+            count={farmerCount}
+          />
+
+          <FarmerCard
+            type="big"
+            title="Farms"
+            icon="farm"
+            countLabel={farmCount === 1 ? "Farm" : "Farms"}
+            onPress={() => router.navigate("/myfarmers")}
+            isLoading={isFarmsLoading}
+            count={farmCount}
+          />
+        </View>
+
+        {recentlyAddedFarmers.length > 0 ? (
+          <View style={styles.recentlyAddedSection}>
+            <AppText fontFamily="SemiBold" fontSize={16} color="black">
+              Recently Added Farmers
+            </AppText>
+
+            <View style={styles.recentlyAddedList}>
+              {recentlyAddedFarmers.map((item) => (
+                <SmallFarmerCard
+                  key={item.id}
+                  item={item}
+                  showNewBadge
+                  avatarSize={40}
+                />
+              ))}
+            </View>
+          </View>
+        ) : null}
+
+        {recentlyAddedFarms.length > 0 ? (
+          <View style={styles.recentlyAddedSection}>
+            <AppText fontFamily="SemiBold" fontSize={16} color="black">
+              Recently Added Farms
+            </AppText>
+
+            <View style={styles.recentlyAddedList}>
+              {recentlyAddedFarms.map((item) => (
+                <FarmCard key={item.id} item={item} variant="compact" showNewBadge />
+              ))}
+            </View>
+          </View>
+        ) : null}
       </ScrollView>
     );
   }
@@ -176,17 +269,6 @@ const Index = () => {
 export default Index;
 
 const styles = StyleSheet.create({
-  adminScreen: {
-    flex: 1,
-    backgroundColor: colors.backgroundPrimary,
-  },
-  adminScrollContent: {
-    paddingBottom: isIOS ? "30%" : "20%",
-  },
-  adminWeatherSection: {
-    marginTop: -100,
-    paddingHorizontal: 16,
-  },
   scrollContent: {
     gap: 32,
     paddingTop: 4,

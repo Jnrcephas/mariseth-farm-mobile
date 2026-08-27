@@ -11,6 +11,12 @@ interface farmerCard {
   onPress?: () => void;
   count?: number | string;
   isLoading?: boolean;
+  /** Overrides the "big" card's default title (defaults to "My Smallholder Farmers"). */
+  title?: string;
+  /** Overrides the "big" card's default icon (defaults to icons.farmer). */
+  icon?: keyof typeof icons;
+  /** Overrides the "big" card's default count subtitle (defaults to "Farmer"/"Farmers"). */
+  countLabel?: string;
 }
 const FarmerCard: React.FC<farmerCard> = ({
   type = "big",
@@ -18,13 +24,17 @@ const FarmerCard: React.FC<farmerCard> = ({
   onPress,
   count,
   isLoading,
+  title,
+  icon,
+  countLabel,
 }) => {
   const name = [item?.first_name, item?.last_name, item?.other_names]
     .filter(Boolean)
     .join(" ");
   const farmerCount = Number(count);
   const farmerLabel =
-    !Number.isNaN(farmerCount) && farmerCount === 1 ? "Farmer" : "Farmers";
+    countLabel ??
+    (!Number.isNaN(farmerCount) && farmerCount === 1 ? "Farmer" : "Farmers");
 
   const cardTypes = {
     small: {
@@ -36,7 +46,7 @@ const FarmerCard: React.FC<farmerCard> = ({
       abtractStyle: styles.otherLooper,
     },
     big: {
-      title: "My Smallholder Farmers",
+      title: title ?? "My Smallholder Farmers",
       count: isLoading ? "..." : count,
       phone: "",
       subtitle: farmerLabel,
@@ -53,7 +63,7 @@ const FarmerCard: React.FC<farmerCard> = ({
         />
         <View style={styles.farmerCardTitleContainer}>
           <Image
-            source={icons.farmer}
+            source={icon ? icons[icon] : icons.farmer}
             style={{ width: 24, height: 24, marginRight: 12 }}
             tintColor={colors.primary}
           />

@@ -7,6 +7,7 @@ import { userStore } from "@/stores/userstore";
 import { smallHolder } from "@/types/farmers";
 import { handleAuthApiError } from "@/utils/apierrorhandler";
 import { dataDecoder, handleToastShow } from "@/utils/commonmethods";
+import { isFieldOfficerExperience } from "@/utils/userroles";
 import { addFarmSchema } from "@/utils/validationschema";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
@@ -23,6 +24,12 @@ const AddFarm = () => {
 
   const user = useStore(userStore, (state) => state.user);
   const isLeaderFarmer = user?.farmer?.type === "lead";
+  // Field officers (now including admins - the backend reuses admin
+  // credentials for them, see isFieldOfficerExperience) have no farm of
+  // their own, so "Apply for myself" never makes sense - every farm they
+  // add must be assigned to a farmer they've onboarded, same as a lead
+  // farmer's "my_farmer" path.
+  const isFieldOfficer = isFieldOfficerExperience(user);
   const metrics = userStore((state) => state.metrics);
   const sizeMetrics = metrics.filter(
     (metric) => metric.category_name === "size_metric"
@@ -65,7 +72,8 @@ const AddFarm = () => {
 
   const formik = useFormik({
     initialValues: {
-      apply_for: preselectedFarmer ? "my_farmer" : "myself",
+      apply_for:
+        preselectedFarmer || isFieldOfficer ? "my_farmer" : "myself",
       farmer_ids: preselectedFarmer ? [preselectedFarmer.id] : ([] as number[]),
       farm_type: "external",
       name: "",
@@ -118,6 +126,7 @@ const AddFarm = () => {
       type="add"
       districts={districts}
       isLeaderFarmer={isLeaderFarmer}
+      isFieldOfficer={isFieldOfficer}
       recentlyAddedFarmers={recentlyAddedFarmers}
     />
   );

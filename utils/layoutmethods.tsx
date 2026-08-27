@@ -147,8 +147,10 @@ export function tabScreenOptions(
     isAdmin?: boolean;
     isLeaderFarmer?: boolean;
     isSmallholder?: boolean;
+    isFieldOfficer?: boolean;
     showLeadFarmerHome?: boolean;
     showFarmerHomeHeader?: boolean;
+    showFieldOfficerHomeHeader?: boolean;
   }
 ) {
   const tabIcons: Record<string, string> = {
@@ -161,7 +163,6 @@ export function tabScreenOptions(
   };
 
   const isMore = tabLabel === "More";
-  const isAdminHome = tabLabel === "Home" && roleOptions?.isAdmin;
   const isSmallholderTabHeader =
     !!roleOptions?.isSmallholder &&
     !roleOptions?.isAdmin &&
@@ -173,9 +174,18 @@ export function tabScreenOptions(
       roleOptions?.showLeadFarmerHome ??
       roleOptions?.isLeaderFarmer) &&
     !roleOptions?.isAdmin;
+  // Covers both admins and (should the backend ever add the user_type back)
+  // real field officers - see isFieldOfficerExperience in userroles.ts.
+  // Deliberately NOT excluded for isAdmin, unlike isFarmerHomeHeader above:
+  // admin credentials are how field officers log in today.
+  const isFieldOfficerHomeHeader =
+    tabLabel === "Home" &&
+    !isSmallholderTabHeader &&
+    !isFarmerHomeHeader &&
+    !!roleOptions?.showFieldOfficerHomeHeader;
 
   return {
-    headerShown: isMore || isAdminHome ? false : true,
+    headerShown: !isMore,
     title: "",
     headerShadowVisible: false,
 
@@ -204,7 +214,7 @@ export function tabScreenOptions(
         );
       }
 
-      if (isFarmerHomeHeader) {
+      if (isFarmerHomeHeader || isFieldOfficerHomeHeader) {
         return (
           <AppText
             fontFamily="SemiBold"
@@ -253,7 +263,7 @@ export function tabScreenOptions(
         );
       }
 
-      if (isFarmerHomeHeader) {
+      if (isFarmerHomeHeader || isFieldOfficerHomeHeader) {
         return (
           <View style={styles.homeHeaderRight}>
             <NotificationButton />
