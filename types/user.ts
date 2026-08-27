@@ -189,7 +189,26 @@ type leadFarmer = {
   user_type: string;
 };
 
-export type user = smallFarmer | leadFarmer;
+// Field officers are Mariseth staff (not farmers themselves) who go out to
+// onboard farmers and register farms on their behalf. They authenticate the
+// same way as farmers (phone + pin) but carry no `farmer` profile - hence
+// `farmer: null` here, unlike smallFarmer/leadFarmer which always have one.
+type fieldOfficer = {
+  access_token: string;
+  email: string;
+  farmer: null;
+  first_name: string;
+  id: number;
+  is_verified: boolean;
+  last_name: string;
+  other_names: string;
+  phone_number: string;
+  refresh_token: string;
+  status: string;
+  user_type: "field_officer";
+};
+
+export type user = smallFarmer | leadFarmer | fieldOfficer;
 
 export type metrics = {
   category_name: string;
