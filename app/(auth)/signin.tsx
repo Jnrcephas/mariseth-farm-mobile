@@ -251,6 +251,18 @@ const SignIn = () => {
             Sign up
           </AppText>
         </Pressable>
+
+        <Pressable
+          onPress={() => router.navigate("/staffsignin")}
+          style={[authStyles.authFooter, { marginTop: 8 }]}
+        >
+          <AppText fontFamily="Regular" color="formLabelText" fontSize={14}>
+            Field officer or staff?
+          </AppText>
+          <AppText fontFamily="SemiBold" color="buttonPrimary" fontSize={14}>
+            Sign in here
+          </AppText>
+        </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
 

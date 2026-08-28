@@ -19,6 +19,17 @@ export const signInSchema = yup.object().shape({
     .max(4, "Pin must be 4 digits"),
 });
 
+// For field officers / other staff signing in with the same email+password
+// admin accounts used on web - see endpoints.adminSignIn.
+export const emailSignInSchema = yup.object().shape({
+  email: yup
+    .string()
+    .email("Enter a valid email address")
+    .required("Email is required"),
+
+  password: yup.string().required("Password is required"),
+});
+
 export const phoneNumberSchema = yup.object().shape({
   phone_number: yup
     .string()
