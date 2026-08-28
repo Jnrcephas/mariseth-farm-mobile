@@ -136,145 +136,143 @@ const SignIn = () => {
           keyboardDismissMode="none"
           showsVerticalScrollIndicator={false}
         >
-        <Image
-          source={images.logo}
-          style={authStyles.logo}
-          contentFit="contain"
-        />
-
-        <AppText
-          fontSize={22}
-          fontFamily="SemiBold"
-          color="textBold"
-          style={{ marginBottom: 6 }}
-        >
-          Welcome back
-        </AppText>
-
-        <AppText
-          fontSize={14}
-          fontFamily="Regular"
-          color="textPrimary"
-          style={{ marginBottom: 22, lineHeight: 22 }}
-        >
-          Sign in to continue
-        </AppText>
-
-        <Text style={styles.fieldLabel}>Phone Number</Text>
-        <View
-          style={[
-            styles.inputBox,
-            { backgroundColor: inputBackground, marginBottom: 4 },
-          ]}
-        >
-          <Text style={styles.prefix}>+233</Text>
-          <TextInput
-            ref={phoneInputRef}
-            style={styles.textInput}
-            value={phoneNumber}
-            onChangeText={(text) =>
-              setPhoneNumber(text.replace(/\D/g, "").slice(0, 10))
-            }
-            keyboardType="phone-pad"
-            returnKeyType="next"
-            blurOnSubmit={false}
-            onSubmitEditing={() => pinInputRef.current?.focus()}
-            maxLength={10}
-            placeholder="Phone number"
-            placeholderTextColor={colors.formPlaceholderText}
-            editable={!isLoading}
-            autoCorrect={false}
-            autoCapitalize="none"
-            underlineColorAndroid="transparent"
+          <Image
+            source={images.logo}
+            style={authStyles.logo}
+            contentFit="contain"
           />
-        </View>
-        <FormErrorMessage error={errors.phone_number} />
 
-        <View
-          onLayout={(event) => {
-            pinSectionY.current = event.nativeEvent.layout.y;
-          }}
-        >
-          <Text style={[styles.fieldLabel, { marginTop: 16 }]}>PIN</Text>
+          <AppText
+            fontSize={22}
+            fontFamily="SemiBold"
+            color="textBold"
+            style={{ marginBottom: 6 }}
+          >
+            Welcome back
+          </AppText>
+
+          <AppText
+            fontSize={14}
+            fontFamily="Regular"
+            color="textPrimary"
+            style={{ marginBottom: 22, lineHeight: 22 }}
+          >
+            Sign in to continue
+          </AppText>
+
+          <Text style={styles.fieldLabel}>Phone Number</Text>
           <View
             style={[
               styles.inputBox,
               { backgroundColor: inputBackground, marginBottom: 4 },
             ]}
           >
+            <Text style={styles.prefix}>+233</Text>
             <TextInput
-              ref={pinInputRef}
+              ref={phoneInputRef}
               style={styles.textInput}
-              value={pin}
+              value={phoneNumber}
               onChangeText={(text) =>
-                setPin(text.replace(/\D/g, "").slice(0, 4))
+                setPhoneNumber(text.replace(/\D/g, "").slice(0, 10))
               }
-              keyboardType="number-pad"
-              maxLength={4}
-              placeholder="Enter your pin"
+              keyboardType="phone-pad"
+              returnKeyType="next"
+              blurOnSubmit={false}
+              onSubmitEditing={() => pinInputRef.current?.focus()}
+              maxLength={10}
+              placeholder="Phone number"
               placeholderTextColor={colors.formPlaceholderText}
               editable={!isLoading}
               autoCorrect={false}
               autoCapitalize="none"
               underlineColorAndroid="transparent"
-              onFocus={() => {
-                pinFocusedRef.current = true;
-                scrollPinIntoView();
-              }}
-              onBlur={() => {
-                pinFocusedRef.current = false;
-              }}
             />
           </View>
-          <FormErrorMessage error={errors.pin} />
-        </View>
+          <FormErrorMessage error={errors.phone_number} />
 
-        <Pressable
-          onPress={() => router.navigate("/forgotpin")}
-          style={{ marginTop: 8 }}
-        >
-          <AppText fontFamily="SemiBold" color="buttonPrimary" fontSize={14}>
-            Forgot pin?
-          </AppText>
-        </Pressable>
+          <View
+            onLayout={(event) => {
+              pinSectionY.current = event.nativeEvent.layout.y;
+            }}
+          >
+            <Text style={[styles.fieldLabel, { marginTop: 16 }]}>PIN</Text>
+            <View
+              style={[
+                styles.inputBox,
+                { backgroundColor: inputBackground, marginBottom: 4 },
+              ]}
+            >
+              <TextInput
+                ref={pinInputRef}
+                style={styles.textInput}
+                value={pin}
+                onChangeText={(text) =>
+                  setPin(text.replace(/\D/g, "").slice(0, 4))
+                }
+                keyboardType="number-pad"
+                maxLength={4}
+                placeholder="Enter your pin"
+                placeholderTextColor={colors.formPlaceholderText}
+                editable={!isLoading}
+                autoCorrect={false}
+                autoCapitalize="none"
+                underlineColorAndroid="transparent"
+                onFocus={() => {
+                  pinFocusedRef.current = true;
+                  scrollPinIntoView();
+                }}
+                onBlur={() => {
+                  pinFocusedRef.current = false;
+                }}
+              />
+            </View>
+            <FormErrorMessage error={errors.pin} />
+          </View>
 
-        <Pressable
-          onPress={() => router.navigate("/signup")}
-          style={authStyles.authFooter}
-        >
-          <AppText fontFamily="Regular" color="formLabelText" fontSize={14}>
-            Don&apos;t have an account?
-          </AppText>
-          <AppText fontFamily="SemiBold" color="formLabelText" fontSize={14}>
-            Sign up
-          </AppText>
-        </Pressable>
+          <Pressable
+            onPress={() => router.navigate("/forgotpin")}
+            style={{ marginTop: 8 }}
+          >
+            <AppText fontFamily="SemiBold" color="buttonPrimary" fontSize={14}>
+              Forgot pin?
+            </AppText>
+          </Pressable>
 
-        <Pressable
-          onPress={() => router.navigate("/staffsignin")}
-          style={[authStyles.authFooter, { marginTop: 8 }]}
-        >
-          <AppText fontFamily="Regular" color="formLabelText" fontSize={14}>
-            Field officer or staff?
-          </AppText>
-          <AppText fontFamily="SemiBold" color="buttonPrimary" fontSize={14}>
-            Sign in here
-          </AppText>
-        </Pressable>
-        </ScrollView>
-      </KeyboardAvoidingView>
+          <Pressable
+            onPress={() => router.navigate("/signup")}
+            style={authStyles.authFooter}
+          >
+            <AppText fontFamily="Regular" color="formLabelText" fontSize={14}>
+              Don&apos;t have an account?
+            </AppText>
+            <AppText fontFamily="SemiBold" color="formLabelText" fontSize={14}>
+              Sign up
+            </AppText>
+          </Pressable>
 
-        <AppButton
-          title="Sign in"
-          textColor="white"
-          btnColor="buttonPrimary"
-          height={48}
-          borderRadius={8}
-          fontSize={16}
-          style={{ marginTop: 24 }}
-          onPress={handleSubmit}
-          disabled={isLoading || !phoneNumber || !pin}
-        />
+          <Pressable
+            onPress={() => router.navigate("/staffsignin")}
+            style={[authStyles.authFooter, { marginTop: 8 }]}
+          >
+            <AppText fontFamily="Regular" color="formLabelText" fontSize={14}>
+              Field officer or staff?
+            </AppText>
+            <AppText fontFamily="SemiBold" color="buttonPrimary" fontSize={14}>
+              Sign in here
+            </AppText>
+          </Pressable>
+
+          <AppButton
+            title="Sign in"
+            textColor="white"
+            btnColor="buttonPrimary"
+            height={48}
+            borderRadius={8}
+            fontSize={16}
+            style={{ marginTop: 24 }}
+            onPress={handleSubmit}
+            disabled={isLoading || !phoneNumber || !pin}
+          />
         </ScrollView>
       </KeyboardAvoidingView>
     </>
