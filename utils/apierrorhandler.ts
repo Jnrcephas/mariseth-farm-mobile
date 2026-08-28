@@ -127,3 +127,85 @@ export function handleAuthApiError(
     "Oops! Something went wrong. Please try again in a moment.";
   handleToastShow(toast, toastMessage);
 }
+
+function extractAdminAuthFieldErrors(message: unknown): AuthFieldErrors {
+  const fieldErrors: AuthFieldErrors = {};
+
+  if (!message || typeof message !== "object") {
+    return fieldErrors;
+  }
+
+  const payload = message as Record<string, string[] | string | undefined>;
+
+  if (payload.email) {
+    fieldErrors.email = Array.isArray(payload.email)
+      ? payload.email[0]
+      : String(payload.email);
+  }
+
+  if (payload.password) {
+    fieldErrors.password = Array.isArray(payload.password)
+      ? payload.password[0]
+      : String(payload.password);
+  }
+
+  if (payload.non_field_errors || payload.detail) {
+    const raw = payload.non_field_errors ?? payload.detail;
+    const apiMessage = Array.isArray(raw) ? raw[0] : String(raw);
+    fieldErrors.email = apiMessage;
+    fieldErrors.password = apiMessage;
+  }
+
+  return fieldErrors;
+}
+
+// Separate from handleAuthApiError above (rather than extending it) so the
+// farmer phone+PIN sign-in flow can't regress from changes made here - this
+// is for the email+password staff/field-officer sign-in (see
+// endpoints.adminSignIn and app/(auth)/staffsignin.tsx).
+export function handleAdminAuthApiError(
+  error: any,
+  formik: AuthErrorTarget,
+  toast: any
+) {
+  const { problem, message } = error;
+
+  console.log(JSON.stringify(error));
+
+  if (problem === "CLIENT_ERROR" || problem === "SERVER_ERROR") {
+    if (isHtmlNotFoundResponse(message)) {
+      handleToastShow(
+        toast,
+        "Login service not found. The API URL in .env may be wrong — ask your backend team for the correct API address."
+      );
+      return;
+    }
+
+    const fieldErrors = extractAdminAuthFieldErrors(message);
+    const firstFieldError = Object.values(fieldErrors).find(Boolean);
+
+    if (formik && Object.keys(fieldErrors).length > 0) {
+      formik.setErrors(fieldErrors);
+      return;
+    }
+
+    handleToastShow(
+      toast,
+      firstFieldError ||
+        "Invalid email or password. Please check your details and try again."
+    );
+    return;
+  }
+
+  const networkErrorMessages: Record<string, string> = {
+    CONNECTION_ERROR:
+      "Oops! You're offline. Check your internet and try again.",
+    NETWORK_ERROR: "Oops! You're offline. Check your internet and try again.",
+    TIMEOUT_ERROR: "Request timed out. Check your connection and try again",
+  };
+
+  const toastMessage =
+    networkErrorMessages[problem] ||
+    "Oops! Something went wrong. Please try again in a moment.";
+  handleToastShow(toast, toastMessage);
+}

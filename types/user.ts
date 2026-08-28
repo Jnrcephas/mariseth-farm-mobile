@@ -190,9 +190,11 @@ type leadFarmer = {
 };
 
 // Field officers are Mariseth staff (not farmers themselves) who go out to
-// onboard farmers and register farms on their behalf. They authenticate the
-// same way as farmers (phone + pin) but carry no `farmer` profile - hence
-// `farmer: null` here, unlike smallFarmer/leadFarmer which always have one.
+// onboard farmers and register farms on their behalf. This type is kept for
+// forward-compatibility only - the backend does NOT currently issue a
+// distinct field_officer credential (see adminUser below, and
+// isFieldOfficerExperience in utils/userroles.ts), so nothing in the app
+// currently produces a user shaped like this.
 type fieldOfficer = {
   access_token: string;
   email: string;
@@ -208,7 +210,25 @@ type fieldOfficer = {
   user_type: "field_officer";
 };
 
-export type user = smallFarmer | leadFarmer | fieldOfficer;
+// The REAL shape field officers get today: they log in with the same
+// email+password admin accounts as the web app, via POST accounts/auth/login
+// (not consumer/mobile/auth/login - see endpoints.adminSignIn). This matches
+// web's `Schemas.UserWithToken` in src/apis/adminApiSchemas.ts exactly - no
+// phone_number/pin/farmer fields, because this account was never a farmer.
+type adminUser = {
+  id: number;
+  email: string;
+  gender?: "m" | "f" | null;
+  first_name: string;
+  last_name: string;
+  access_token: string;
+  refresh_token: string;
+  avatar?: string | null;
+  user_type: "admin";
+  farmer?: null;
+};
+
+export type user = smallFarmer | leadFarmer | fieldOfficer | adminUser;
 
 export type metrics = {
   category_name: string;

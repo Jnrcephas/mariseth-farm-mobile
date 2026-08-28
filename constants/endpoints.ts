@@ -3,6 +3,12 @@ const authBase = `${base}/auth`;
 export const endpoints = {
   // AUTH ENDPOINTS
   signIn: `${authBase}/login`,
+  // Field officers log in with the same email+password admin accounts used
+  // on web (see accounts/auth/login in the web app's adminApiComponents.ts)
+  // - the backend doesn't issue a separate field-officer credential, see
+  // isFieldOfficerExperience in utils/userroles.ts. NOT under consumer/mobile
+  // - this is the shared accounts auth endpoint, same one web admins use.
+  adminSignIn: "accounts/auth/login",
   signup: `${authBase}/register`,
   verify: `${authBase}/verify-phone`,
   forgotPin: `${authBase}/forgot-password`,
