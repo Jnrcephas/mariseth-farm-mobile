@@ -5,6 +5,7 @@ import { endpoints } from "@/constants/endpoints";
 import { kelvinToCelsius, mpsToKph, useFarmWeather, useFetchQuery } from "@/hooks/usefetchquery";
 import { userStore } from "@/stores/userstore";
 import { getWeatherAssets } from "@/utils/commonmethods";
+import { isFieldOfficerExperience } from "@/utils/userroles";
 import { format } from "date-fns";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -77,7 +78,7 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
   // has the farm loaded and passes farmId directly, so this is skipped
   // there via `enabled`.
   const { data: ownFarm } = useFetchQuery(endpoints.myFarm, "myfarm", {
-    enabled: !farmIdOverride,
+    enabled: !farmIdOverride && !isFieldOfficerExperience(userStore.getState().user),
   });
   const farmId = farmIdOverride ?? ownFarm?.id;
 
