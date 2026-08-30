@@ -60,6 +60,7 @@ export default StaffInformation;
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    backgroundColor: "#fff",
   },
   container: {
     paddingHorizontal: 16,
