@@ -30,6 +30,20 @@ export const emailSignInSchema = yup.object().shape({
   password: yup.string().required("Password is required"),
 });
 
+// For field officers / staff changing their real password (not a 4-digit
+// PIN) - see endpoints.updatePassword and app/more/changepassword.tsx.
+export const changePasswordSchema = yup.object().shape({
+  old_password: yup.string().required("Current password is required"),
+  new_password: yup
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .required("New password is required"),
+  confirm_password: yup
+    .string()
+    .oneOf([yup.ref("new_password")], "Passwords do not match")
+    .required("Please confirm your new password"),
+});
+
 export const phoneNumberSchema = yup.object().shape({
   phone_number: yup
     .string()

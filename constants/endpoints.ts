@@ -9,6 +9,18 @@ export const endpoints = {
   // isFieldOfficerExperience in utils/userroles.ts. NOT under consumer/mobile
   // - this is the shared accounts auth endpoint, same one web admins use.
   adminSignIn: "accounts/auth/login",
+  // Field officer / admin equivalents of the farmer-scoped endpoints below -
+  // the lead-farmer endpoints 403 for admin tokens ("User does not have a
+  // farmer profile"), since admins aren't farmers. These mirror what the
+  // web admin dashboard uses for Farm Management (see
+  // useFarmManagementFarmerList / useFarmManagementFarmCreate etc. in the
+  // web app's src/apis/adminApiComponents.ts). Picked via
+  // utils/farmdatasource.ts rather than used directly - see that file.
+  adminFarmers: "farm-management/farmer",
+  adminFarms: "farm-management/farm",
+  // Field officers/admins change a real password, not a 4-digit PIN - see
+  // app/more/changepassword.tsx. Matches web's accounts/auth/update_password.
+  updatePassword: "accounts/auth/update_password",
   signup: `${authBase}/register`,
   verify: `${authBase}/verify-phone`,
   forgotPin: `${authBase}/forgot-password`,

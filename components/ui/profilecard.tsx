@@ -1,7 +1,7 @@
 import { user } from "@/types/user";
 import { icons } from "@/constants/icons";
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import { Href, router } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import AppText from "./apptext";
@@ -10,6 +10,7 @@ import InitialsAvatar from "./initialsavatar";
 interface profileCard {
   item: user | null;
   readonly?: boolean;
+  route?: Href;
 }
 
 export const formatPhoneDisplay = (phone?: string) => {
@@ -25,7 +26,11 @@ export const formatPhoneDisplay = (phone?: string) => {
   return `+${normalized}`;
 };
 
-const ProfileCard: React.FC<profileCard> = ({ item, readonly = false }) => {
+const ProfileCard: React.FC<profileCard> = ({
+  item,
+  readonly = false,
+  route = "/more/profileinformation",
+}) => {
   const fullName = `${item?.first_name ?? ""} ${item?.last_name ?? ""}`.trim();
   const type = item?.farmer?.type;
   const formattedType = type
@@ -74,7 +79,7 @@ const ProfileCard: React.FC<profileCard> = ({ item, readonly = false }) => {
   return (
     <Pressable
       style={styles.profileCardContainer}
-      onPress={() => router.navigate("/more/profileinformation")}
+      onPress={() => router.navigate(route)}
     >
       {content}
     </Pressable>

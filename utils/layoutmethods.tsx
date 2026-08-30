@@ -125,6 +125,14 @@ export function changePinHeaderHandler() {
   return formScreenHeaderHandler("Change Pin");
 }
 
+export function changePasswordHeaderHandler() {
+  return formScreenHeaderHandler("Change Password");
+}
+
+export function staffInformationHeaderHandler() {
+  return formScreenHeaderHandler("My Information");
+}
+
 export function walletHeaderHandler() {
   return formScreenHeaderHandler("Wallet");
 }

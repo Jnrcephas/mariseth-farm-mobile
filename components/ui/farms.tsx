@@ -1,6 +1,7 @@
-import { endpoints } from "@/constants/endpoints";
 import { width } from "@/constants/generalconstants";
 import { usePaginatedInfiniteQuery } from "@/hooks/usefetchquery";
+import { userStore } from "@/stores/userstore";
+import { getFarmListSource } from "@/utils/farmdatasource";
 import { differenceInDays, parseISO } from "date-fns";
 import React, { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
@@ -15,6 +16,9 @@ const isRecentlyAddedFarm = (farm: any) => {
 };
 
 const Farms = () => {
+  const user = userStore((state) => state.user);
+  const { endpoint, queryKey } = getFarmListSource(user);
+
   const {
     fetchNextPage,
     hasNextPage,
@@ -22,14 +26,10 @@ const Farms = () => {
     items,
     refetch,
     isRefetching,
-  } = usePaginatedInfiniteQuery<any>(
-    endpoints.leadFarmersFarms,
-    "leadfarmersfarms",
-    {
-      page_size: 10,
-      query: "",
-    }
-  );
+  } = usePaginatedInfiniteQuery<any>(endpoint, queryKey, {
+    page_size: 10,
+    query: "",
+  });
 
   const hasFarms = (items?.length ?? 0) > 0;
 
