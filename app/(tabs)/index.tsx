@@ -11,6 +11,7 @@ import { endpoints } from "@/constants/endpoints";
 import { isIOS } from "@/constants/generalconstants";
 import { usePaginatedInfiniteQuery } from "@/hooks/usefetchquery";
 import { userStore } from "@/stores/userstore";
+import { getFarmListSource, getFarmerListSource } from "@/utils/farmdatasource";
 import {
   isFieldOfficerExperience,
   isSmallholderUser,
@@ -45,14 +46,19 @@ const Index = () => {
   // see isFieldOfficerExperience in utils/userroles.ts.
   const isFieldOfficer = isFieldOfficerExperience(user);
 
+  const { endpoint: farmerEndpoint, queryKey: farmerQueryKey } =
+    getFarmerListSource(user);
+  const { endpoint: farmEndpoint, queryKey: farmQueryKey } =
+    getFarmListSource(user);
+
   const {
     data,
     isLoading,
     isError,
     items,
   } = usePaginatedInfiniteQuery<any>(
-    endpoints.myFarmers,
-    "smallholders",
+    farmerEndpoint,
+    farmerQueryKey,
     {
       page_size: 10,
       query: "",
@@ -65,8 +71,8 @@ const Index = () => {
     isLoading: isFarmsLoading,
     isError: isFarmsError,
   } = usePaginatedInfiniteQuery<any>(
-    endpoints.leadFarmersFarms,
-    "leadfarmersfarms",
+    farmEndpoint,
+    farmQueryKey,
     {
       page_size: 10,
       query: "",

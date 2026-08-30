@@ -105,7 +105,10 @@ export default function TabsLayout() {
     {
       page_size: 50,
       query: "",
-    }
+    },
+    // Own-farm products - doesn't apply to field officers/admins, who have
+    // no farm of their own (see isFieldOfficerExperience above).
+    { enabled: !isFieldOfficerUI }
   );
 
   React.useEffect(() => {
@@ -121,7 +124,12 @@ export default function TabsLayout() {
     {
       page_size: 10,
       query: "",
-    }
+    },
+    // Field officers/admins get their farms list from the admin
+    // farm-management endpoint instead (fetched separately in the Home and
+    // My Farmers screens - see utils/farmdatasource.ts) - this lead-farmer
+    // endpoint 403s for them.
+    { enabled: !isFieldOfficerUI }
   );
 
   React.useEffect(() => {

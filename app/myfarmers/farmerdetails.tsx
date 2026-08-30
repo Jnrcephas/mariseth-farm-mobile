@@ -5,14 +5,15 @@ import InfoCard from "@/components/ui/infocard";
 import AppText from "@/components/ui/apptext";
 import { SegmentedScrollView } from "@/components/ui/segmentedview";
 import { colors } from "@/constants/colors";
-import { endpoints } from "@/constants/endpoints";
 import { isIOS, width } from "@/constants/generalconstants";
 import { icons } from "@/constants/icons";
 import { usePaginatedInfiniteQuery } from "@/hooks/usefetchquery";
 import { useUniversalStore } from "@/stores/useuniversalstore";
+import { userStore } from "@/stores/userstore";
 import { livestockKept } from "@/types/farm";
 import { smallHolder } from "@/types/farmers";
 import { dataDecoder, dataEncoder } from "@/utils/commonmethods";
+import { getFarmListSource } from "@/utils/farmdatasource";
 import { differenceInDays, format, parseISO } from "date-fns";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo } from "react";
@@ -35,9 +36,13 @@ const FarmerDetails = () => {
   );
   const isFarmTabSelected = selectedOption === "Farm";
 
+  const user = userStore((state) => state.user);
+  const { endpoint: farmEndpoint, queryKey: farmQueryKey } =
+    getFarmListSource(user);
+
   const { items: allFarms } = usePaginatedInfiniteQuery<any>(
-    endpoints.leadFarmersFarms,
-    "leadfarmersfarms",
+    farmEndpoint,
+    farmQueryKey,
     {
       page_size: 50,
       query: "",

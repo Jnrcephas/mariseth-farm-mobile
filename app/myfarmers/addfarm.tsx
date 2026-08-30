@@ -1,12 +1,12 @@
 import FarmForm from "@/components/ui/farmform";
 import { pointsToGeoJSON } from "@/components/ui/farmboundarycapture";
-import { endpoints } from "@/constants/endpoints";
 import { usePaginatedInfiniteQuery } from "@/hooks/usefetchquery";
 import useAuthMutation from "@/hooks/usemutation";
 import { userStore } from "@/stores/userstore";
 import { smallHolder } from "@/types/farmers";
 import { handleAuthApiError } from "@/utils/apierrorhandler";
 import { dataDecoder, handleToastShow } from "@/utils/commonmethods";
+import { getAddFarmSource, getFarmerListSource } from "@/utils/farmdatasource";
 import { isFieldOfficerExperience } from "@/utils/userroles";
 import { addFarmSchema } from "@/utils/validationschema";
 import { useQueryClient } from "@tanstack/react-query";
@@ -36,9 +36,14 @@ const AddFarm = () => {
   );
   const regions = userStore((state) => state.regions);
 
+  const { endpoint: farmerEndpoint, queryKey: farmerQueryKey } =
+    getFarmerListSource(user);
+  const { endpoint: addFarmEndpoint, queryKey: farmQueryKey } =
+    getAddFarmSource(user);
+
   const { items: farmers } = usePaginatedInfiniteQuery<any>(
-    endpoints.myFarmers,
-    "smallholders",
+    farmerEndpoint,
+    farmerQueryKey,
     {
       page_size: 10,
       query: "",
@@ -50,16 +55,16 @@ const AddFarm = () => {
   const toast = useToast();
   const queryClient = useQueryClient();
   const { mutate, isLoading } = useAuthMutation(
-    `${endpoints.addNewFarm}`,
+    addFarmEndpoint,
     "POST",
     "addfarm",
     {
       onSuccess: () => {
         handleToastShow(toast, "Farm has been added successfully!");
         queryClient
-          .invalidateQueries({ queryKey: ["leadfarmersfarms"] })
+          .invalidateQueries({ queryKey: [farmQueryKey] })
           .then(() => {
-            queryClient.invalidateQueries({ queryKey: ["smallholders"] });
+            queryClient.invalidateQueries({ queryKey: [farmerQueryKey] });
             router.back();
           });
       },
@@ -108,7 +113,25 @@ const AddFarm = () => {
         return;
       }
       const boundary = pointsToGeoJSON(boundaryPoints);
-      mutate(boundary ? { ...rest, boundary } : rest);
+      const withBoundary = boundary ? { ...rest, boundary } : rest;
+
+      if (isFieldOfficer) {
+        // The lead-farmer endpoint takes `apply_for` + `farmer_ids` (an
+        // array, since a lead farmer picks from a checklist); the admin
+        // farm-management endpoint has no such concept and just wants a
+        // single `farmer` id. Known limitation: if more than one farmer is
+        // checked, only the first is used - the checklist UI is shared
+        // with the lead-farmer flow and doesn't (yet) restrict field
+        // officers to a single selection.
+        const { apply_for, farmer_ids, ...adminRest } = withBoundary;
+        mutate({
+          ...adminRest,
+          farmer: farmer_ids?.[0] ?? null,
+        });
+        return;
+      }
+
+      mutate(withBoundary);
     },
   });
 

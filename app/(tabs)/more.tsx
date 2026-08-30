@@ -7,7 +7,7 @@ import { icons } from "@/constants/icons";
 import { userStore } from "@/stores/userstore";
 import { useUniversalStore } from "@/stores/useuniversalstore";
 import { moreLink } from "@/types/more";
-import { isSmallholderUser } from "@/utils/userroles";
+import { isFieldOfficerExperience, isSmallholderUser } from "@/utils/userroles";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import React from "react";
@@ -21,10 +21,36 @@ const getLinkLabel = (item: moreLink, isSmallholder: boolean) => {
   return item.name;
 };
 
+// Field officers/staff log in with admin accounts (see
+// app/(auth)/staffsignin.tsx): no wallet (that's a farmer's own money), and
+// a real password instead of a 4-digit PIN, so those two entries get
+// swapped or dropped rather than reusing the farmer versions as-is.
+const getLinksForRole = (isFieldOfficer: boolean) => {
+  if (!isFieldOfficer) return moreLinks;
+
+  return moreLinks
+    .filter((item) => item.route !== "/more/wallet")
+    .map((item) => {
+      if (item.route === "/more/profileinformation") {
+        return { ...item, route: "/more/staffinformation" as const };
+      }
+      if (item.route === "/more/changepin") {
+        return {
+          ...item,
+          name: "Change Password",
+          route: "/more/changepassword" as const,
+        };
+      }
+      return item;
+    });
+};
+
 const More = () => {
   const topInset = useSafeAreaInsets().top;
   const user = userStore((state) => state.user);
   const isSmallholder = isSmallholderUser(user);
+  const isFieldOfficer = isFieldOfficerExperience(user);
+  const links = getLinksForRole(isFieldOfficer);
   const logoutModalVisible = useUniversalStore(
     (state) => state.logoutModalVisible
   );
@@ -51,10 +77,13 @@ const More = () => {
           },
         ]}
       >
-        <ProfileCard item={user} />
+        <ProfileCard
+          item={user}
+          route={isFieldOfficer ? "/more/staffinformation" : undefined}
+        />
 
         <View style={styles.linksSection}>
-          {moreLinks.map((item: moreLink, index: number) => {
+          {links.map((item: moreLink, index: number) => {
             const isLogout = item.variant === "logout";
 
             return (

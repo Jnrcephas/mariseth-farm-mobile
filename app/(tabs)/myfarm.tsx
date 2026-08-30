@@ -23,7 +23,7 @@ import { useFetchQuery, usePaginatedInfiniteQuery } from "@/hooks/usefetchquery"
 import { useUniversalStore } from "@/stores/useuniversalstore";
 import { userStore } from "@/stores/userstore";
 import { SegmentedControlValue } from "@/types/universal";
-import { isLeadFarmerUser, isSmallholderUser } from "@/utils/userroles";
+import { isFieldOfficerExperience, isLeadFarmerUser, isSmallholderUser } from "@/utils/userroles";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
@@ -72,6 +72,11 @@ const MyFarm = () => {
   const user = useStore(userStore, (state) => state.user);
   const isLeaderFarmer = isLeadFarmerUser(user);
   const isSmallholder = isSmallholderUser(user);
+  // This tab is hidden from the tab bar for field officers/admins (see
+  // href: null in app/(tabs)/_layout.tsx), but the fetch below still needs
+  // its own gate - the endpoint 500s for them since they have no farm of
+  // their own (see isFieldOfficerExperience in utils/userroles.ts).
+  const isFieldOfficer = isFieldOfficerExperience(user);
 
   const selectedTab = useUniversalStore(
     (state) => state.selectedSegmentedOption.myFarm
@@ -80,7 +85,8 @@ const MyFarm = () => {
 
   const { data, isLoading, error, refetch } = useFetchQuery(
     endpoints.myFarm,
-    "myfarm"
+    "myfarm",
+    { enabled: !isFieldOfficer }
   );
 
   // Reflect real boundary state instead of a static "coming soon" label -
