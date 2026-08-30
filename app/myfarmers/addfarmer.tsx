@@ -1,9 +1,10 @@
 import AddFarmerForm from "@/components/ui/addfarmerform";
-import { endpoints } from "@/constants/endpoints";
 import useAuthMutation from "@/hooks/usemutation";
 import { userStore } from "@/stores/userstore";
 import { handleAuthApiError } from "@/utils/apierrorhandler";
 import { handleToastShow } from "@/utils/commonmethods";
+import { getAddFarmerSource } from "@/utils/farmdatasource";
+import { isFieldOfficerExperience } from "@/utils/userroles";
 import { addFarmerSchema } from "@/utils/validationschema";
 import { useQueryClient } from "@tanstack/react-query";
 import { router } from "expo-router";
@@ -20,20 +21,28 @@ const normalizeFarmerPhone = (phone: string) => {
 };
 
 const AddFarmer = () => {
+  const user = userStore((state) => state.user);
   const farms = userStore((state) => state.farms);
   const regions = userStore((state) => state.regions);
+  // Field officers/admins create farmers through the same admin
+  // farm-management endpoint the web dashboard uses (no farmer profile of
+  // their own to create "under", unlike a lead farmer) - see
+  // utils/farmdatasource.ts and isFieldOfficerExperience.
+  const isFieldOfficer = isFieldOfficerExperience(user);
+  const { endpoint: addFarmerEndpoint, queryKey: farmerQueryKey } =
+    getAddFarmerSource(user);
 
   const toast = useToast();
   const queryClient = useQueryClient();
   const { mutate, isLoading } = useAuthMutation(
-    endpoints.addNewFarmer,
+    addFarmerEndpoint,
     "POST",
     "addNewFarmer",
     {
       onSuccess: () => {
         handleToastShow(toast, "Farmer has been added successfully!");
         queryClient
-          .invalidateQueries({ queryKey: ["smallholders"] })
+          .invalidateQueries({ queryKey: [farmerQueryKey] })
           .then(() => {
             router.back();
           });
@@ -79,6 +88,13 @@ const AddFarmer = () => {
         farm: values.farm || null,
         district: Number(values.district),
         region: Number(values.region),
+        // The lead-farmer endpoint infers "smallholder under this lead
+        // farmer" from the token; the admin farm-management endpoint has
+        // no such implicit context and requires `type` explicitly. Field
+        // officers only onboard smallholders (same as lead farmers do
+        // through this screen), so this is hardcoded rather than exposed
+        // as a form field.
+        ...(isFieldOfficer ? { type: "smallholder" } : {}),
       };
 
       mutate(payload);

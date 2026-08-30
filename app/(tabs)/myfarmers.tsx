@@ -9,16 +9,18 @@ import MyFarmersSP from "@/components/ui/skeletonplaceholders/myfarmers";
 import SmallFarmerCard from "@/components/ui/smallfarmercard";
 import SmallFarmers from "@/components/ui/smallfarmers";
 import { colors } from "@/constants/colors";
-import { endpoints } from "@/constants/endpoints";
 import { isIOS } from "@/constants/generalconstants";
 import { icons } from "@/constants/icons";
 import { usePaginatedInfiniteQuery } from "@/hooks/usefetchquery";
+import { userStore } from "@/stores/userstore";
 import { useUniversalStore } from "@/stores/useuniversalstore";
+import { getFarmerListSource } from "@/utils/farmdatasource";
 import { router } from "expo-router";
 import React, { useMemo } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
 const MyFarmers = () => {
+  const user = userStore((state) => state.user);
   const selectedOption = useUniversalStore(
     (state) => state.selectedSegmentedOption.myFarmers
   );
@@ -42,6 +44,9 @@ const MyFarmers = () => {
     },
   };
 
+  const { endpoint: farmerEndpoint, queryKey: farmerQueryKey } =
+    getFarmerListSource(user);
+
   const {
     data,
     isLoading,
@@ -52,7 +57,7 @@ const MyFarmers = () => {
     refetch,
     isRefetching,
     error,
-  } = usePaginatedInfiniteQuery<any>(endpoints.myFarmers, "smallholders", {
+  } = usePaginatedInfiniteQuery<any>(farmerEndpoint, farmerQueryKey, {
     page_size: 10,
     query: "",
   });

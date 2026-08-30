@@ -11,7 +11,7 @@ import { isIOS } from "@/constants/generalconstants";
 import { icons } from "@/constants/icons";
 import { usePaginatedInfiniteQuery } from "@/hooks/usefetchquery";
 import { userStore } from "@/stores/userstore";
-import { isSmallholderUser } from "@/utils/userroles";
+import { isFieldOfficerExperience, isSmallholderUser } from "@/utils/userroles";
 import { router } from "expo-router";
 import React from "react";
 import { StyleSheet, View } from "react-native";
@@ -19,6 +19,11 @@ import { StyleSheet, View } from "react-native";
 const Credits = () => {
   const user = userStore((state) => state.user);
   const isSmallholder = isSmallholderUser(user);
+  // This tab is hidden from the tab bar for field officers/admins (see
+  // href: null in app/(tabs)/_layout.tsx) since they have no credit history
+  // of their own, but gate the fetch too - the endpoint 403s/500s for them
+  // regardless of whether the tab bar entry is visible.
+  const isFieldOfficer = isFieldOfficerExperience(user);
 
   const {
     isLoading,
@@ -35,7 +40,8 @@ const Credits = () => {
     {
       page_size: 10,
       query: "",
-    }
+    },
+    { enabled: !isFieldOfficer }
   );
 
   if (error) {
