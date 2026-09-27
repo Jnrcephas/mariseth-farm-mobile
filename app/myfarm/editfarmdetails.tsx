@@ -5,7 +5,7 @@ import { endpoints } from "@/constants/endpoints";
 import useAuthMutation from "@/hooks/usemutation";
 import { userStore } from "@/stores/userstore";
 import { myFarm1 } from "@/types/farm";
-import { handleAuthApiError } from "@/utils/apierrorhandler";
+import { handleAuthApiError, handleGenericApiError } from "@/utils/apierrorhandler";
 import { dataDecoder, handleToastShow } from "@/utils/commonmethods";
 import { adddFarmerSchema } from "@/utils/validationschema";
 import { useQueryClient } from "@tanstack/react-query";
@@ -62,10 +62,9 @@ const EditFarmDetails = () => {
             router.back();
           });
       },
-
       onError: (error: any) => {
         console.log(error);
-        handleAuthApiError(error, formik, toast);
+        handleGenericApiError(error, toast); 
       },
     }
   );

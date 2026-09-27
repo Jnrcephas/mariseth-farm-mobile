@@ -29,6 +29,55 @@ export function getErrorMessage(status: number, body: string): string {
     : body || "Failed to fetch current weather data.";
 }
 
+// Add this new helper after extractAuthFieldErrors
+function extractGenericErrorMessage(message: unknown): string | null {
+  if (!message || typeof message !== "object") return null;
+  const payload = message as Record<string, unknown>;
+
+  // {"error": "..."} — used by farm, profile, and most resource endpoints
+  if (typeof payload.error === "string") return payload.error;
+
+  // {"detail": "..."} — used by some DRF permission/throttle responses
+  if (typeof payload.detail === "string") return payload.detail;
+
+  return null;
+}
+
+// New generic handler for non-auth mutations (farms, etc.)
+export function handleGenericApiError(error: any, toast: any) {
+  const { problem, message } = error;
+
+  console.log(JSON.stringify(error));
+
+  if (problem === "CLIENT_ERROR" || problem === "SERVER_ERROR") {
+    if (isHtmlNotFoundResponse(message)) {
+      handleToastShow(
+        toast,
+        "Service not found. The API URL in .env may be wrong — ask your backend team for the correct address."
+      );
+      return;
+    }
+
+    const serverMessage = extractGenericErrorMessage(message);
+    handleToastShow(
+      toast,
+      serverMessage ?? "Something went wrong. Please try again."
+    );
+    return;
+  }
+
+  const networkErrorMessages: Record<string, string> = {
+    CONNECTION_ERROR: "Oops! You're offline. Check your internet and try again.",
+    NETWORK_ERROR: "Oops! You're offline. Check your internet and try again.",
+    TIMEOUT_ERROR: "Request timed out. Check your connection and try again.",
+  };
+
+  handleToastShow(
+    toast,
+    networkErrorMessages[problem] ?? "Oops! Something went wrong. Please try again in a moment."
+  );
+}
+
 type AuthFieldErrors = Record<string, string | undefined>;
 type AuthErrorTarget = { setErrors: (errors: AuthFieldErrors) => void } | null;
 
