@@ -180,6 +180,7 @@ const AddFarmerForm: React.FC<AddFarmerFormProps> = ({
           error={(formik.touched.village && formik.errors.village) as string}
         />
 
+
         <RegionSelector
           label="District"
           placeholder="type here"
@@ -188,6 +189,7 @@ const AddFarmerForm: React.FC<AddFarmerFormProps> = ({
           formik={formik}
           value={formik.values.district}
           required={false}
+          searchable={true}   // ← add this
         />
         <FormErrorMessage error={formik.errors.district as string} />
 
