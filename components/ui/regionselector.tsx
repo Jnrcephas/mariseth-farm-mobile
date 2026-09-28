@@ -25,6 +25,7 @@ interface regionSelectorProps {
   formik: FormikProps<any>;
   value: number | string;
   required?: boolean;
+  searchable?: boolean;
 }
 
 const RegionSelector: React.FC<regionSelectorProps> = ({
@@ -34,6 +35,7 @@ const RegionSelector: React.FC<regionSelectorProps> = ({
   field,
   formik,
   required = true,
+  searchable = false,
 }) => {
   const selectModalVisible = useUniversalStore(
     (state) => state.selectModalVisible
@@ -82,8 +84,10 @@ const RegionSelector: React.FC<regionSelectorProps> = ({
           onClose={() => handleVisibility(false)}
           label={label}
           data={data}
+          searchable={searchable}
+          searchPlaceholder={`Search ${label.toLowerCase()}...`}
           keyExtractor={(item, index) => index?.toString() as string}
-          renderItem={({ item, index }) => (
+          renderItem={({ item }) => (
             <TouchableHighlight
               underlayColor={colors.buttonActionSheet}
               style={[
@@ -116,27 +120,17 @@ const RegionSelector: React.FC<regionSelectorProps> = ({
               color="textBold"
               style={{ paddingVertical: "10%", textAlign: "center" }}
             >
-              {`No ${field} data available`}
+              {`No ${label.toLowerCase()} data available`}
             </AppText>
           }
         />
       )}
+
       <View style={{ width: "100%" }}>
-        <View
-          style={{
-            flexDirection: "row",
-            marginBottom: 8,
-          }}
-        >
-          <AppText
-            fontSize={14}
-            fontFamily="SemiBold"
-            color="formLabelText"
-            style={{}}
-          >
+        <View style={{ flexDirection: "row", marginBottom: 8 }}>
+          <AppText fontSize={14} fontFamily="SemiBold" color="formLabelText">
             {label}
           </AppText>
-
           {required && (
             <AppText
               fontSize={14}
@@ -152,9 +146,7 @@ const RegionSelector: React.FC<regionSelectorProps> = ({
         <Pressable
           style={[
             styles.selectButton,
-            {
-              borderColor: hasError ? colors.error : colors.formBorder,
-            },
+            { borderColor: hasError ? colors.error : colors.formBorder },
           ]}
           onPress={() => handleVisibility(true)}
         >
@@ -164,7 +156,7 @@ const RegionSelector: React.FC<regionSelectorProps> = ({
             color="formInputText"
             style={{ flex: 1 }}
           >
-            {selectedItem ? selectedItem?.name : placeholder}
+            {selectedItem ? selectedItem.name : placeholder}
           </AppText>
           <Image
             source={icons.arrowDown}

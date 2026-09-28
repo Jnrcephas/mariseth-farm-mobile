@@ -1,9 +1,16 @@
 import { colors } from "@/constants/colors";
 import { icons } from "@/constants/icons";
 import { Image } from "expo-image";
-import React from "react";
-import { Modal, StyleSheet, TouchableOpacity, View } from "react-native";
+import React, { useState } from "react";
+import {
+  Modal,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
+import Svg, { Path } from "react-native-svg";
 import AppText from "./apptext";
 
 interface ModalSelectorProps {
@@ -14,6 +21,8 @@ interface ModalSelectorProps {
   renderItem: (item: any) => React.ReactElement;
   keyExtractor: (item: any, index?: number) => string;
   ListEmptyComponent: React.ReactElement;
+  searchable?: boolean;
+  searchPlaceholder?: string;
 }
 
 const ModalSelector: React.FC<ModalSelectorProps> = ({
@@ -24,14 +33,28 @@ const ModalSelector: React.FC<ModalSelectorProps> = ({
   renderItem,
   keyExtractor,
   ListEmptyComponent,
+  searchable = false,
+  searchPlaceholder = "Search...",
 }) => {
+  const [query, setQuery] = useState("");
+
+  const filteredData =
+    searchable && query.trim()
+      ? data.filter((item) =>
+          item?.name?.toLowerCase().includes(query.toLowerCase())
+        )
+      : data;
+
+  const handleClose = () => {
+    setQuery("");
+    onClose();
+  };
+
   return (
     <Modal
       visible={visible}
       animationType="none"
       transparent
-      navigationBarTranslucent
-      statusBarTranslucent
     >
       <View style={styles.modalBgOverlay}>
         <Animated.View
@@ -49,19 +72,62 @@ const ModalSelector: React.FC<ModalSelectorProps> = ({
               >
                 {label}
               </AppText>
-
-              <TouchableOpacity onPress={onClose}>
+              <TouchableOpacity onPress={handleClose}>
                 <Image source={icons.close} style={styles.closeIcon} />
               </TouchableOpacity>
             </View>
 
+            {searchable && (
+              <View style={styles.searchContainer}>
+                <Svg
+                  width={16}
+                  height={16}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  style={{ marginRight: 8 }}
+                >
+                  <Path
+                    d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
+                    stroke={colors.formPlaceholderText}
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </Svg>
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder={searchPlaceholder}
+                  placeholderTextColor={colors.formPlaceholderText}
+                  value={query}
+                  onChangeText={setQuery}
+                  autoCorrect={false}
+                  autoCapitalize="none"
+                  clearButtonMode="while-editing"
+                />
+              </View>
+            )}
+
             <Animated.FlatList
               entering={FadeInDown.duration(500)}
               exiting={FadeOutDown.duration(650)}
-              data={data}
+              data={filteredData}
               keyExtractor={keyExtractor}
               renderItem={renderItem}
-              ListEmptyComponent={ListEmptyComponent}
+              keyboardShouldPersistTaps="handled"
+              ListEmptyComponent={
+                searchable && query.trim() ? (
+                  <AppText
+                    fontFamily="Medium"
+                    fontSize={15}
+                    color="textBold"
+                    style={{ paddingVertical: "10%", textAlign: "center" }}
+                  >
+                    No results for "{query}"
+                  </AppText>
+                ) : (
+                  ListEmptyComponent
+                )
+              }
             />
           </View>
         </Animated.View>
@@ -81,7 +147,6 @@ const styles = StyleSheet.create({
     height: "100%",
     zIndex: 999999,
   },
-
   modalContainer: {
     paddingHorizontal: 16,
     width: "100%",
@@ -106,6 +171,26 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     tintColor: colors.primary,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 4,
+    paddingHorizontal: 12,
+    height: 40,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.formBorder,
+    backgroundColor: colors.backgroundPrimary,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    fontFamily: "Regular",
+    color: colors.formInputText,
+    paddingVertical: 0,
   },
   itemButton: {
     paddingVertical: 15,

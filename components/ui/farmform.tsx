@@ -163,9 +163,11 @@ const FarmForm: React.FC<farmFormProps> = ({
             value={formik.values.region}
           />
 
+
           <FormErrorMessage
             error={(formik.touched.region && formik.errors.region) as string}
           />
+
 
           <RegionSelector
             label="District"
@@ -174,6 +176,7 @@ const FarmForm: React.FC<farmFormProps> = ({
             field="district"
             formik={formik}
             value={formik.values.district}
+            searchable={true}   // ← add this
           />
 
           <FormErrorMessage error={formik.errors.district} />
