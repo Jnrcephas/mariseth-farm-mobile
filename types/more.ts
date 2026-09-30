@@ -4,5 +4,5 @@ export type moreLink = {
   name: string;
   icon: any;
   route?: Href;
-  variant?: "default" | "logout";
+  variant?: "default" | "logout" | "delete";
 };

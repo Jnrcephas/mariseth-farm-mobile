@@ -6,6 +6,7 @@ export type SegmentedControlState = {
 
 export type universalStore = {
   logoutModalVisible: boolean;
+  deleteAccountModalVisible: boolean;
   datePickerVisible: boolean;
   enabled: boolean;
   selectedSegmentedOption: SegmentedControlState;
