@@ -3,6 +3,7 @@ import { create } from "zustand";
 
 export const useUniversalStore = create<universalStore>((set, get) => ({
   logoutModalVisible: false,
+  deleteAccountModalVisible: false,
   datePickerVisible: false,
   selectModalVisible: {},
   enabled: false,

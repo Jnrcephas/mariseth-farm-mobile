@@ -1,4 +1,5 @@
 import AppText from "@/components/ui/apptext";
+import DeleteAccountModal from "@/components/ui/deleteaccountmodal";
 import LogoutModal from "@/components/ui/logoutmodal";
 import ProfileCard from "@/components/ui/profilecard";
 import { colors } from "@/constants/colors";
@@ -45,6 +46,10 @@ const getLinksForRole = (isFieldOfficer: boolean) => {
     });
 };
 
+const deleteAccountModalVisible = useUniversalStore(
+  (state) => state.deleteAccountModalVisible
+);
+
 const More = () => {
   const topInset = useSafeAreaInsets().top;
   const user = userStore((state) => state.user);
@@ -55,20 +60,24 @@ const More = () => {
     (state) => state.logoutModalVisible
   );
 
-  const handleLinkPress = (item: moreLink) => {
-    if (item.variant === "logout") {
-      useUniversalStore.setState({ logoutModalVisible: true });
-      return;
-    }
-
-    if (item.route) {
-      router.navigate(item.route);
-    }
-  };
+ const handleLinkPress = (item: moreLink) => {
+  if (item.variant === "logout") {
+    useUniversalStore.setState({ logoutModalVisible: true });
+    return;
+  }
+  if (item.variant === "delete") {
+    useUniversalStore.setState({ deleteAccountModalVisible: true });
+    return;
+  }
+  if (item.route) {
+    router.navigate(item.route);
+  }
+};
 
   return (
     <>
-      {logoutModalVisible && <LogoutModal />}
+     {logoutModalVisible && <LogoutModal />}
+    {deleteAccountModalVisible && <DeleteAccountModal />}
       <View
         style={[
           styles.moreContainer,
@@ -84,7 +93,7 @@ const More = () => {
 
         <View style={styles.linksSection}>
           {links.map((item: moreLink, index: number) => {
-            const isLogout = item.variant === "logout";
+            const isLogout = item.variant === "logout" || item.variant === "delete";
 
             return (
               <Pressable

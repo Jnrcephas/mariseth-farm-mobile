@@ -3,7 +3,7 @@ import { endpoints } from "@/constants/endpoints";
 import useAuthMutation from "@/hooks/usemutation";
 import { userStore } from "@/stores/userstore";
 import { useUniversalStore } from "@/stores/useuniversalstore";
-import { handleAuthApiError } from "@/utils/apierrorhandler";
+import { handleGenericApiError } from "@/utils/apierrorhandler";
 import { router } from "expo-router";
 import React from "react";
 import { Modal, StyleSheet, View } from "react-native";
@@ -12,21 +12,19 @@ import { useStore } from "zustand";
 import AppButton from "./appbutton";
 import AppText from "./apptext";
 
-const LogoutModal = React.memo(() => {
-  const logoutModalVisible = useStore(
+const DeleteAccountModal = React.memo(() => {
+  const deleteAccountModalVisible = useStore(
     useUniversalStore,
-    (state) => state.logoutModalVisible
+    (state) => state.deleteAccountModalVisible
   );
-  const user = useStore(userStore, (state) => state.user);
   const toast = useToast();
 
   const { mutate, isLoading } = useAuthMutation(
-    endpoints.logout,
-    "POST",
-    "logout",
+    endpoints.deleteAccount,
+    "DELETE",
+    "deleteaccount",
     {
-      onSuccess: (data) => {
-        console.log("LOGOUT", data);
+      onSuccess: () => {
         userStore.setState({
           user: null,
           notifications: [],
@@ -37,18 +35,18 @@ const LogoutModal = React.memo(() => {
           farmProducts: [],
           farms: [],
         });
-        useUniversalStore.setState({ logoutModalVisible: false });
+        useUniversalStore.setState({ deleteAccountModalVisible: false });
         router.replace(`/(auth)`);
       },
       onError: (error: any) => {
-        handleAuthApiError(error, null, toast);
+        handleGenericApiError(error, toast);
       },
     }
   );
 
   return (
     <Modal
-      visible={logoutModalVisible}
+      visible={deleteAccountModalVisible}
       animationType="fade"
       transparent
     >
@@ -61,7 +59,7 @@ const LogoutModal = React.memo(() => {
               color="formLabelText"
               style={styles.title}
             >
-              Logout?
+              Delete Account?
             </AppText>
 
             <AppText
@@ -70,15 +68,15 @@ const LogoutModal = React.memo(() => {
               color="tabBarInactive"
               style={styles.message}
             >
-              You are about to log out of this account. You will have to log back
-              in to access your information and use the app.
+              This will permanently delete your account and all associated data.
+              This action cannot be undone.
             </AppText>
           </View>
 
           <View style={styles.buttonRow}>
             <View style={styles.buttonWrapper}>
               <AppButton
-                title="Log out"
+                title="Delete"
                 textColor="white"
                 btnColor="error"
                 height={38}
@@ -87,9 +85,7 @@ const LogoutModal = React.memo(() => {
                 borderColor="error"
                 loading={isLoading}
                 style={styles.buttonShadow}
-                onPress={() => {
-                  mutate({ refresh_token: user?.refresh_token });
-                }}
+                onPress={() => mutate({})}
               />
             </View>
 
@@ -103,9 +99,11 @@ const LogoutModal = React.memo(() => {
                 borderWidth={1.2}
                 borderColor="formBorder"
                 style={styles.buttonShadow}
-                onPress={() => {
-                  useUniversalStore.setState({ logoutModalVisible: false });
-                }}
+                onPress={() =>
+                  useUniversalStore.setState({
+                    deleteAccountModalVisible: false,
+                  })
+                }
               />
             </View>
           </View>
@@ -115,7 +113,7 @@ const LogoutModal = React.memo(() => {
   );
 });
 
-export default LogoutModal;
+export default DeleteAccountModal;
 
 const styles = StyleSheet.create({
   overlay: {

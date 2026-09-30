@@ -14,6 +14,8 @@ export const endpoints = {
   verify: `${authBase}/verify-phone`,
   forgotPin: `${authBase}/forgot-password`,
   resendOtp: `${authBase}/resend-verification-code`,
+  deleteAccount: `${authBase}/delete`,
+  
   pinSetup: `${authBase}/setup-pin`,
   updateAccount: `${authBase}/update-account`,
   updatePin: `${authBase}/update-pin`,

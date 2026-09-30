@@ -109,6 +109,11 @@ export const moreLinks: Array<moreLink> = [
     route: "/more/helpsupport",
   },
   {
+    name: "Delete Account",
+    icon: icons.user,       // swap for a better icon if you add one later
+    variant: "delete",
+  },
+  {
     name: "Log out",
     icon: icons.logout,
     variant: "logout",
