@@ -47,9 +47,9 @@ const EditFarmDetails = () => {
 
   const queryClient = useQueryClient();
   const { mutate, isLoading, error } = useAuthMutation(
-    `${endpoints.editMyFarmDetails}/${user?.farmer?.farm?.id}`,
-    "POST",
-    "editfarmdetails",
+  `${endpoints.adminFarms}/${user?.farmer?.farm?.id}`,
+  "PUT",
+  "editfarmdetails",
     {
       onSuccess: async (data) => {
         // console.log(JSON.stringify(data));
