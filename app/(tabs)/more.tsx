@@ -46,9 +46,6 @@ const getLinksForRole = (isFieldOfficer: boolean) => {
     });
 };
 
-const deleteAccountModalVisible = useUniversalStore(
-  (state) => state.deleteAccountModalVisible
-);
 
 const More = () => {
   const topInset = useSafeAreaInsets().top;
@@ -60,24 +57,28 @@ const More = () => {
     (state) => state.logoutModalVisible
   );
 
- const handleLinkPress = (item: moreLink) => {
-  if (item.variant === "logout") {
-    useUniversalStore.setState({ logoutModalVisible: true });
-    return;
-  }
-  if (item.variant === "delete") {
-    useUniversalStore.setState({ deleteAccountModalVisible: true });
-    return;
-  }
-  if (item.route) {
-    router.navigate(item.route);
-  }
-};
+  const deleteAccountModalVisible = useUniversalStore(
+    (state) => state.deleteAccountModalVisible
+  );
+
+  const handleLinkPress = (item: moreLink) => {
+    if (item.variant === "logout") {
+      useUniversalStore.setState({ logoutModalVisible: true });
+      return;
+    }
+    if (item.variant === "delete") {
+      useUniversalStore.setState({ deleteAccountModalVisible: true });
+      return;
+    }
+    if (item.route) {
+      router.navigate(item.route);
+    }
+  };
 
   return (
     <>
-     {logoutModalVisible && <LogoutModal />}
-    {deleteAccountModalVisible && <DeleteAccountModal />}
+      {logoutModalVisible && <LogoutModal />}
+      {deleteAccountModalVisible && <DeleteAccountModal />}
       <View
         style={[
           styles.moreContainer,
