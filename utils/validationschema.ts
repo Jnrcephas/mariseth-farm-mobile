@@ -195,6 +195,10 @@ export const addFarmerSchema = yup.object().shape({
     .oneOf(["m", "f"], "Please select gender")
     .required("Gender is required"),
   date_of_birth: yup.string().required("Date of Birth is required"),
+  id_type: yup
+    .string()
+    .oneOf(["ghana_card", "passport"], "Please select an ID type")
+    .required("ID Type is required"),
   id_number: yup.string().required("National ID/Passport Number is required"),
 
   phone_number: yup.string().when("type", {

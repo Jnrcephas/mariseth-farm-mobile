@@ -50,6 +50,12 @@ const RegionSelector: React.FC<regionSelectorProps> = ({
         [field]: value,
       },
     }));
+    // Closing the picker (with or without choosing) counts as "visited", so a
+    // required field left empty can show its error instead of silently
+    // leaving the submit button disabled. shouldValidate=false: no extra pass.
+    if (!value) {
+      formik.setFieldTouched(field, true, false);
+    }
   };
 
   const handleRegionSelect = (itemId: number) => {

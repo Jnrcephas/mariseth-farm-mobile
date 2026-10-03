@@ -109,6 +109,10 @@ export function addFarmerHeaderHandler() {
   return formScreenHeaderHandler("Add New Farmer");
 }
 
+export function editFarmerHeaderHandler() {
+  return formScreenHeaderHandler("Edit Farmer");
+}
+
 export function addFarmHeaderHandler() {
   return formScreenHeaderHandler("Add New Farm");
 }

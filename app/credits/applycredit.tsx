@@ -172,6 +172,8 @@ const ApplyCredit = () => {
         extraHeight={100}
         extraScrollHeight={100}
         enableOnAndroid={true}
+        // Keep the user where they were after a keyboard/modal closes (see AddFarmerForm).
+        enableResetScrollToCoords={false}
         keyboardShouldPersistTaps="always"
         keyboardDismissMode="none"
         bounces={false}

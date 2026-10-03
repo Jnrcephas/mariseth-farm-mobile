@@ -4,6 +4,7 @@ import { userStore } from "@/stores/userstore";
 import { handleAuthApiError } from "@/utils/apierrorhandler";
 import { handleToastShow } from "@/utils/commonmethods";
 import { getAddFarmerSource } from "@/utils/farmdatasource";
+import { normalizeFarmerPhone, splitFullName } from "@/utils/farmerhelpers";
 import { isFieldOfficerExperience } from "@/utils/userroles";
 import { addFarmerSchema } from "@/utils/validationschema";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,14 +12,6 @@ import { router } from "expo-router";
 import { useFormik } from "formik";
 import React from "react";
 import { useToast } from "react-native-toast-notifications";
-
-const normalizeFarmerPhone = (phone: string) => {
-  const digits = phone.replace(/\s/g, "");
-  const withoutLeadingZero = digits.startsWith("0") ? digits.slice(1) : digits;
-  return withoutLeadingZero.startsWith("233")
-    ? withoutLeadingZero
-    : `233${withoutLeadingZero}`;
-};
 
 const AddFarmer = () => {
   const user = userStore((state) => state.user);
@@ -66,6 +59,7 @@ const AddFarmer = () => {
       date_of_birth: "",
       phone_number: "",
       type: "add",
+      id_type: "ghana_card",
       id_number: "",
       farm: "",
       first_name: "",
@@ -75,15 +69,12 @@ const AddFarmer = () => {
     validationSchema: addFarmerSchema,
     onSubmit: async (values) => {
       const { name, type, ...rest } = values;
-      const fullName = name.trim().split(/\s+/);
       const payload = {
         ...rest,
-        first_name: fullName[0] || "",
-        last_name: fullName[1] || "",
-        other_names: fullName.slice(2).join(" ") || "",
+        ...splitFullName(name),
         email: values.email.trim() || null,
         phone_number: normalizeFarmerPhone(values.phone_number),
-        id_type: "ghana_card",
+        id_type: values.id_type,
         id_number: values.id_number.trim(),
         farm: values.farm || null,
         district: Number(values.district),
