@@ -41,3 +41,24 @@ export function getAddFarmSource(userData?: user | null) {
   }
   return { endpoint: endpoints.addNewFarm, queryKey: "leadfarmersfarms" };
 }
+
+/**
+ * Editing an existing farmer.
+ *
+ * ASSUMPTION - confirm with the backend team: there is no dedicated
+ * "lead-farmer/edit-farmer" endpoint in constants/endpoints.ts. The existing
+ * edit-farm screen (app/myfarm/editfarmdetails.tsx) already updates farms with
+ * `PUT farm-management/farm/{id}` for lead farmers too, so this follows the
+ * same pattern for farmers: `PUT farm-management/farmer/{id}`. If the backend
+ * exposes a lead-farmer-scoped endpoint instead, this is the only place to
+ * change.
+ *
+ * Both list query keys are returned because a lead farmer's list lives under
+ * "smallholders" and a field officer's under "admin-farmers".
+ */
+export function getEditFarmerSource(farmerId: number | string) {
+  return {
+    endpoint: `${endpoints.adminFarmers}/${farmerId}`,
+    queryKeys: ["smallholders", "admin-farmers"],
+  };
+}

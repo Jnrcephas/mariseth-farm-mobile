@@ -11,13 +11,22 @@ import AppDatePicker from "./appdatepicker";
 import AppTextInput from "./apptextinput";
 import FormErrorMessage from "./formerrormessage";
 import GenderSelector from "./genderselector";
+import IDSelector from "./idselector";
 import RegionSelector from "./regionselector";
+
+export const ID_TYPE_OPTIONS = [
+  { name: "Ghana Card", value: "ghana_card" },
+  { name: "Passport", value: "passport" },
+];
 
 interface AddFarmerFormProps {
   formik: FormikProps<any>;
   isLoading: boolean;
   districts: { id: number; name: string }[];
   farms: myFarm1[];
+  /** "add" registers a new farmer, "edit" updates an existing one. Both use
+   * the same fields so the form can only ever drift in one place. */
+  mode?: "add" | "edit";
 }
 
 const AddFarmerForm: React.FC<AddFarmerFormProps> = ({
@@ -25,6 +34,7 @@ const AddFarmerForm: React.FC<AddFarmerFormProps> = ({
   isLoading,
   districts,
   farms,
+  mode = "add",
 }) => {
   const bottomInset = useSafeAreaInsets().bottom;
   const inputBackground = isLoading
@@ -37,6 +47,12 @@ const AddFarmerForm: React.FC<AddFarmerFormProps> = ({
         extraHeight={150}
         extraScrollHeight={50}
         enableOnAndroid
+        // Without this, the library remembers the scroll offset from the FIRST
+        // time the keyboard opened (usually the top of the form) and scrolls
+        // back to it every time the keyboard closes - including when a
+        // dropdown/date modal opens. That is what was sending Android users
+        // back to the top of the form after every input.
+        enableResetScrollToCoords={false}
         keyboardShouldPersistTaps="always"
         keyboardDismissMode="none"
         bounces={false}
@@ -44,7 +60,7 @@ const AddFarmerForm: React.FC<AddFarmerFormProps> = ({
         contentContainerStyle={styles.scrollContent}
       >
         <AppTextInput
-          error={formik.errors.name}
+          error={formik.touched.name && formik.errors.name}
           label="Name"
           placeholder="Abena Bonsu"
           style={{ backgroundColor: inputBackground }}
@@ -58,12 +74,20 @@ const AddFarmerForm: React.FC<AddFarmerFormProps> = ({
           onBlur={() => formik.setFieldTouched("name")}
           onChangeText={formik.handleChange("name")}
         />
-        <FormErrorMessage error={formik.errors.name as string} />
+        <FormErrorMessage
+          error={(formik.touched.name && formik.errors.name) as string}
+        />
 
+        {/* The selection indicator (green border + tick) is what tells the
+            user their tap registered. It used to be switched off here, so
+            tapping Male/Female updated the form value but looked like
+            nothing had happened. */}
         <GenderSelector
           value={formik.values.gender}
-          onChange={(value) => formik.setFieldValue("gender", value)}
-          showSelectionIndicator={false}
+          onChange={(value) => {
+            formik.setFieldTouched("gender", true, false);
+            formik.setFieldValue("gender", value);
+          }}
         />
         <FormErrorMessage
           error={(formik.touched.gender && formik.errors.gender) as string}
@@ -85,6 +109,17 @@ const AddFarmerForm: React.FC<AddFarmerFormProps> = ({
             (formik.touched.date_of_birth &&
               formik.errors.date_of_birth) as string
           }
+        />
+
+        <IDSelector
+          label="ID Type"
+          placeholder="Select ID Type"
+          data={ID_TYPE_OPTIONS}
+          field="id_type"
+          formik={formik}
+        />
+        <FormErrorMessage
+          error={(formik.touched.id_type && formik.errors.id_type) as string}
         />
 
         <AppTextInput
@@ -146,11 +181,14 @@ const AddFarmerForm: React.FC<AddFarmerFormProps> = ({
           error={(formik.touched.email && formik.errors.email) as string}
         />
 
+        {/* Address, Village/Community and District are all required by
+            addFarmerSchema, so each one needs the red asterisk. */}
         <AppTextInput
           error={formik.touched.address && formik.errors.address}
           label="Address"
           placeholder="type here"
           style={{ backgroundColor: inputBackground }}
+          required
           autoCapitalize="sentences"
           value={formik.values.address}
           autoCorrect={false}
@@ -168,6 +206,7 @@ const AddFarmerForm: React.FC<AddFarmerFormProps> = ({
           label="Village/Community"
           placeholder="type here"
           style={{ backgroundColor: inputBackground }}
+          required
           autoCapitalize="words"
           value={formik.values.village}
           autoCorrect={false}
@@ -180,18 +219,19 @@ const AddFarmerForm: React.FC<AddFarmerFormProps> = ({
           error={(formik.touched.village && formik.errors.village) as string}
         />
 
-
         <RegionSelector
           label="District"
-          placeholder="type here"
+          placeholder="Select district"
           data={districts}
           field="district"
           formik={formik}
           value={formik.values.district}
-          required={false}
-          searchable={true}   // ← add this
+          required
+          searchable
         />
-        <FormErrorMessage error={formik.errors.district as string} />
+        <FormErrorMessage
+          error={(formik.touched.district && formik.errors.district) as string}
+        />
 
         <RegionSelector
           label="Select Farm Here"
@@ -209,7 +249,7 @@ const AddFarmerForm: React.FC<AddFarmerFormProps> = ({
 
       <View style={[styles.footer, { paddingBottom: bottomInset + 23 }]}>
         <AppButton
-          title="Create Farmer"
+          title={mode === "edit" ? "Save Changes" : "Create Farmer"}
           textColor="white"
           btnColor="buttonPrimary"
           borderRadius={8}

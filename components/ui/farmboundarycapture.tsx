@@ -1,13 +1,39 @@
-import * as Location from "expo-location";
 import React, { useState } from "react";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import { Linking, Pressable, StyleSheet, TextInput, View } from "react-native";
 import { Image } from "expo-image";
 import AppButton from "./appbutton";
 import AppText from "./apptext";
 import { colors } from "@/constants/colors";
 import { icons } from "@/constants/icons";
+import {
+  distanceInMetres,
+  getFreshPosition,
+  getLocationErrorCode,
+  POOR_ACCURACY_M,
+} from "@/utils/location";
 
-export type BoundaryPoint = { latitude: number; longitude: number };
+export type BoundaryPoint = {
+  latitude: number;
+  longitude: number;
+  /** Metres of GPS error when the point was marked. Not sent to the backend. */
+  accuracy?: number;
+};
+
+// How close (metres) a new point can be to the previous one before we tell the
+// person it looks like they haven't moved.
+const SAME_SPOT_METRES = 3;
+
+const LOCATION_ERROR_MESSAGES: Record<string, string> = {
+  PERMISSION_DENIED:
+    "Location permission is needed to mark boundary points. Enable it in your phone's settings.",
+  APPROXIMATE_ONLY:
+    "Your phone is only sharing an approximate location with this app, so the coordinates won't change as you walk. In Settings, set this app's Location permission to \"Precise\", then try again.",
+  SERVICES_OFF:
+    "Location is turned off on your phone. Turn on Location (and Google Location Accuracy) in your phone's settings, then try again.",
+  TIMEOUT:
+    "Couldn't get a GPS reading. Move to an open area away from buildings and trees, then try again.",
+  UNKNOWN: "Couldn't get your location. Make sure GPS is on and try again.",
+};
 
 // Converts captured points into the GeoJSON Polygon shape the backend
 // expects on the farm creation/edit payload. GeoJSON coordinates are
@@ -77,35 +103,54 @@ const FarmBoundaryCapture = ({
 }) => {
   const [isCapturing, setIsCapturing] = useState(false);
   const [permissionError, setPermissionError] = useState<string | null>(null);
+  const [needsSettings, setNeedsSettings] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
   const [pasteError, setPasteError] = useState<string | null>(null);
 
   const handleMarkPoint = async () => {
     setPermissionError(null);
+    setNeedsSettings(false);
+    setNotice(null);
     setIsCapturing(true);
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setPermissionError(
-          "Location permission is needed to mark boundary points. Enable it in your phone's settings."
+      // Live GPS reading (not a cached one) - see utils/location.ts for why.
+      const fix = await getFreshPosition();
+      const newPoint: BoundaryPoint = {
+        latitude: fix.latitude,
+        longitude: fix.longitude,
+        ...(fix.accuracy != null ? { accuracy: fix.accuracy } : {}),
+      };
+
+      const previous = points[points.length - 1];
+      const moved = previous ? distanceInMetres(previous, newPoint) : null;
+      const accuracyText =
+        fix.accuracy != null ? ` (accuracy about ${Math.round(fix.accuracy)} m)` : "";
+
+      if (fix.accuracy != null && fix.accuracy > POOR_ACCURACY_M) {
+        setNotice(
+          `Point ${points.length + 1} marked, but the GPS signal is weak${accuracyText}. For a better reading, tap Undo, move to open sky and mark it again.`
         );
-        return;
+      } else if (moved != null && moved < SAME_SPOT_METRES) {
+        setNotice(
+          `Point ${points.length + 1} marked${accuracyText}, but it is only ${Math.round(
+            moved
+          )} m from the previous point. Walk to the next corner before marking again.`
+        );
+      } else {
+        setNotice(`Point ${points.length + 1} marked${accuracyText}.`);
       }
 
-      const position = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-      });
-
-      onChange([
-        ...points,
-        {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        },
-      ]);
-    } catch {
-      setPermissionError("Couldn't get your location. Make sure GPS is on and try again.");
+      onChange([...points, newPoint]);
+    } catch (error) {
+      const code = getLocationErrorCode(error);
+      setPermissionError(LOCATION_ERROR_MESSAGES[code] ?? LOCATION_ERROR_MESSAGES.UNKNOWN);
+      setNeedsSettings(
+        code === "PERMISSION_DENIED" ||
+          code === "APPROXIMATE_ONLY" ||
+          code === "SERVICES_OFF"
+      );
     } finally {
       setIsCapturing(false);
     }
@@ -115,13 +160,17 @@ const FarmBoundaryCapture = ({
     // Start the new row from the last point (if any) so it's at least in
     // the right neighbourhood rather than defaulting to 0,0 in the ocean.
     const base = points.length > 0 ? points[points.length - 1] : { latitude: 0, longitude: 0 };
-    onChange([...points, { ...base }]);
+    onChange([...points, { latitude: base.latitude, longitude: base.longitude }]);
   };
 
   const handleUpdatePoint = (index: number, field: "latitude" | "longitude", raw: string) => {
     const num = parseFloat(raw);
     onChange(
-      points.map((pt, i) => (i === index ? { ...pt, [field]: Number.isNaN(num) ? 0 : num } : pt))
+      points.map((pt, i) =>
+        i === index
+          ? { latitude: pt.latitude, longitude: pt.longitude, [field]: Number.isNaN(num) ? 0 : num }
+          : pt
+      )
     );
   };
 
@@ -179,8 +228,29 @@ const FarmBoundaryCapture = ({
       ) : null}
 
       {permissionError ? (
-        <AppText fontFamily="Regular" fontSize={12} color="error">
-          {permissionError}
+        <View style={{ gap: 6 }}>
+          <AppText fontFamily="Regular" fontSize={12} color="error">
+            {permissionError}
+          </AppText>
+          {needsSettings ? (
+            <Pressable onPress={() => Linking.openSettings()} hitSlop={8}>
+              <AppText fontFamily="SemiBold" fontSize={12} color="primary">
+                Open phone settings
+              </AppText>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
+
+      {isCapturing ? (
+        <AppText fontFamily="Regular" fontSize={12} color="formLabelText">
+          Getting a live GPS reading - stand still for a few seconds...
+        </AppText>
+      ) : null}
+
+      {notice ? (
+        <AppText fontFamily="Regular" fontSize={12} color="formLabelText">
+          {notice}
         </AppText>
       ) : null}
 
@@ -205,7 +275,10 @@ const FarmBoundaryCapture = ({
             borderColor="light"
             height={44}
             fontSize={14}
-            onPress={() => onChange(points.slice(0, -1))}
+            onPress={() => {
+              setNotice(null);
+              onChange(points.slice(0, -1));
+            }}
           />
         ) : null}
       </View>

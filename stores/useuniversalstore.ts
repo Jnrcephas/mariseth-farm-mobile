@@ -6,6 +6,7 @@ export const useUniversalStore = create<universalStore>((set, get) => ({
   deleteAccountModalVisible: false,
   datePickerVisible: false,
   selectModalVisible: {},
+  editedFarmers: {},
   enabled: false,
 
   selectedSegmentedOption: {

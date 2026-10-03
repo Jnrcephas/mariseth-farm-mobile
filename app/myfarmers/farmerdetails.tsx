@@ -14,6 +14,7 @@ import { livestockKept } from "@/types/farm";
 import { smallHolder } from "@/types/farmers";
 import { dataDecoder, dataEncoder } from "@/utils/commonmethods";
 import { getFarmListSource } from "@/utils/farmdatasource";
+import { canManageFarmersAndFarms } from "@/utils/userroles";
 import { differenceInDays, format, parseISO } from "date-fns";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useMemo } from "react";
@@ -27,7 +28,13 @@ const isRecentlyAddedFarm = (farm: any) => {
 
 const FarmerDetails = () => {
   const params = useLocalSearchParams<{ data: string }>();
-  const data: smallHolder = dataDecoder(params?.data);
+  const routeData: smallHolder = dataDecoder(params?.data);
+  // The route param is a snapshot from when the card was tapped. If this
+  // farmer was edited since, the saved values live in the store.
+  const editedData = useUniversalStore((state) =>
+    routeData?.id ? state.editedFarmers[routeData.id] : undefined
+  );
+  const data: smallHolder = { ...routeData, ...editedData };
   const selectedOption = useUniversalStore(
     (state) => state.selectedSegmentedOption.myFarmerDetails
   );
@@ -60,10 +67,19 @@ const FarmerDetails = () => {
     [allFarms, data?.id]
   );
 
+  // This list is already scoped by the backend (a lead farmer only ever sees
+  // their own smallholders; field officers/admins see the ones they manage),
+  // so anyone allowed to manage farmers may edit what's shown here.
+  const canEditFarmer = canManageFarmersAndFarms(user);
+
   const farmerPersonalInformation = {
     headerTitle: "Personal Information",
     headerIcon: icons.user,
-    onEditPress: () => {},
+    // The Edit button only renders when this is defined. It used to be an
+    // empty `() => {}`, which is why tapping Edit did nothing.
+    onEditPress: canEditFarmer
+      ? () => router.navigate(`/myfarmers/editfarmer?data=${dataEncoder(data)}`)
+      : undefined,
     information: [
       {
         key: "Gender",
@@ -95,7 +111,11 @@ const FarmerDetails = () => {
   const farmInformation = {
     headerTitle: "Farm Information",
     headerIcon: icons.user,
-    onEditPress: () => {},
+    // No onEditPress on purpose: this used to be an empty `() => {}` (a
+    // second dead Edit button). The only farm editor in the app,
+    // app/myfarm/editfarmdetails.tsx, saves to the *signed-in user's own*
+    // farm id, so pointing it at a smallholder's farm would overwrite the
+    // wrong record. Re-add once that screen can target a farm by id.
     information: [
       { key: "Farm Name", value: data?.farm?.name || "N/A" },
       {

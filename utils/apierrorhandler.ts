@@ -40,6 +40,17 @@ function extractGenericErrorMessage(message: unknown): string | null {
   // {"detail": "..."} — used by some DRF permission/throttle responses
   if (typeof payload.detail === "string") return payload.detail;
 
+  // {"phone_number": ["A farmer with this phone number already exists."]} —
+  // DRF field validation errors. Surface the first one rather than a vague
+  // "something went wrong" so the person knows what to fix.
+  for (const [field, value] of Object.entries(payload)) {
+    const first = Array.isArray(value) ? value[0] : value;
+    if (typeof first === "string" && first.trim()) {
+      const label = field === "non_field_errors" ? "" : `${field.replace(/_/g, " ")}: `;
+      return `${label}${first}`;
+    }
+  }
+
   return null;
 }
 
