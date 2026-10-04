@@ -23,6 +23,13 @@ interface ModalSelectorProps {
   ListEmptyComponent: React.ReactElement;
   searchable?: boolean;
   searchPlaceholder?: string;
+  /**
+   * Server-side search. When provided, the typed text is reported here and the
+   * list is shown exactly as given (no local filtering) - the caller refetches
+   * `data` for the new term. Leave undefined for the normal local filter.
+   */
+  onQueryChange?: (query: string) => void;
+  isLoading?: boolean;
 }
 
 const ModalSelector: React.FC<ModalSelectorProps> = ({
@@ -35,18 +42,26 @@ const ModalSelector: React.FC<ModalSelectorProps> = ({
   ListEmptyComponent,
   searchable = false,
   searchPlaceholder = "Search...",
+  onQueryChange,
+  isLoading = false,
 }) => {
   const [query, setQuery] = useState("");
 
   const filteredData =
-    searchable && query.trim()
+    searchable && !onQueryChange && query.trim()
       ? data.filter((item) =>
           item?.name?.toLowerCase().includes(query.toLowerCase())
         )
       : data;
 
+  const handleQueryChange = (text: string) => {
+    setQuery(text);
+    onQueryChange?.(text);
+  };
+
   const handleClose = () => {
     setQuery("");
+    onQueryChange?.("");
     onClose();
   };
 
@@ -99,7 +114,7 @@ const ModalSelector: React.FC<ModalSelectorProps> = ({
                   placeholder={searchPlaceholder}
                   placeholderTextColor={colors.formPlaceholderText}
                   value={query}
-                  onChangeText={setQuery}
+                  onChangeText={handleQueryChange}
                   autoCorrect={false}
                   autoCapitalize="none"
                   clearButtonMode="while-editing"
@@ -115,7 +130,16 @@ const ModalSelector: React.FC<ModalSelectorProps> = ({
               renderItem={renderItem}
               keyboardShouldPersistTaps="handled"
               ListEmptyComponent={
-                searchable && query.trim() ? (
+                isLoading ? (
+                  <AppText
+                    fontFamily="Medium"
+                    fontSize={15}
+                    color="textPrimary"
+                    style={{ paddingVertical: "10%", textAlign: "center" }}
+                  >
+                    Loading...
+                  </AppText>
+                ) : searchable && query.trim() ? (
                   <AppText
                     fontFamily="Medium"
                     fontSize={15}

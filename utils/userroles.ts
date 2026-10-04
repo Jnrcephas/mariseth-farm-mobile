@@ -87,3 +87,15 @@ export function canEditOwnFarm(userData?: user | null) {
   if (!userData?.farmer || isAdminUser(userData)) return false;
   return isLeadFarmerUser(userData) || isSmallholderUser(userData);
 }
+
+/**
+ * Who sees the "Farmer Type" choice when registering a farmer (Smallholder
+ * vs Commercial). Currently everyone who can add farmers. Heads-up: a lead
+ * farmer's "My Farmers" list only contains their own smallholders, so a
+ * commercial farmer (which has no lead farmer) they register won't appear in
+ * it. To limit commercial registration to staff, return
+ * `isFieldOfficerExperience(userData)` here instead.
+ */
+export function canRegisterCommercialFarmer(userData?: user | null) {
+  return canManageFarmersAndFarms(userData);
+}

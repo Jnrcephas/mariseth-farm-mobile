@@ -2,6 +2,7 @@ import { colors } from "@/constants/colors";
 import { icons } from "@/constants/icons";
 import { smallHolder } from "@/types/farmers";
 import { dataEncoder } from "@/utils/commonmethods";
+import { farmerTypeLabel } from "@/utils/farmerform";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import React from "react";
@@ -73,6 +74,14 @@ const SmallFarmerCard: React.FC<smallCardFarmer> = ({
           <AppText fontFamily="Medium" fontSize={13} color="textPrimary">
             {item?.phone_number}
           </AppText>
+
+          {/* A field officer's list mixes farmer types; smallholder is the
+              default so only the others get a tag. */}
+          {item?.type && item.type !== "smallholder" ? (
+            <AppText fontFamily="Medium" fontSize={13} color="textPrimary">
+              {` · ${farmerTypeLabel(item.type)}`}
+            </AppText>
+          ) : null}
 
           {item?.farm?.name ? (
             <AppText fontFamily="Medium" fontSize={13} color="primary">

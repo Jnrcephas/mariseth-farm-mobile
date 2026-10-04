@@ -28,11 +28,25 @@ export function getFarmListSource(userData?: user | null) {
   return { endpoint: endpoints.leadFarmersFarms, queryKey: "leadfarmersfarms" };
 }
 
-export function getAddFarmerSource(userData?: user | null) {
-  if (isFieldOfficerExperience(userData)) {
-    return { endpoint: endpoints.adminFarmers, queryKey: "admin-farmers" };
-  }
-  return { endpoint: endpoints.addNewFarmer, queryKey: "smallholders" };
+/**
+ * Registering a farmer uses the SAME endpoint as the web admin dashboard
+ * (`POST farm-management/farmer`) for everyone, lead farmers included - so a
+ * farmer registered on mobile and on web goes through identical backend
+ * validation and stores identical data. (Lead farmers used to post to
+ * `consumer/mobile/lead-farmer/add-new-farmer`, a separate serializer.)
+ *
+ * That endpoint doesn't infer anything from the token the way the lead-farmer
+ * one did, so the request must say `type: "smallholder"` and which lead farmer
+ * the farmer belongs to - see buildFarmerPayload in utils/farmerform.ts.
+ *
+ * A lead farmer's "My Farmers" list is cached under "smallholders" and a
+ * field officer's under "admin-farmers", so both are invalidated after a save.
+ */
+export function getAddFarmerSource(_userData?: user | null) {
+  return {
+    endpoint: endpoints.adminFarmers,
+    queryKeys: ["smallholders", "admin-farmers"],
+  };
 }
 
 export function getAddFarmSource(userData?: user | null) {
@@ -43,15 +57,9 @@ export function getAddFarmSource(userData?: user | null) {
 }
 
 /**
- * Editing an existing farmer.
- *
- * ASSUMPTION - confirm with the backend team: there is no dedicated
- * "lead-farmer/edit-farmer" endpoint in constants/endpoints.ts. The existing
- * edit-farm screen (app/myfarm/editfarmdetails.tsx) already updates farms with
- * `PUT farm-management/farm/{id}` for lead farmers too, so this follows the
- * same pattern for farmers: `PUT farm-management/farmer/{id}`. If the backend
- * exposes a lead-farmer-scoped endpoint instead, this is the only place to
- * change.
+ * Editing an existing farmer: `PUT farm-management/farmer/{id}`, the same
+ * endpoint the web admin dashboard uses (and the one the edit-farm screen
+ * already uses for farms, for lead farmers too).
  *
  * Both list query keys are returned because a lead farmer's list lives under
  * "smallholders" and a field officer's under "admin-farmers".
