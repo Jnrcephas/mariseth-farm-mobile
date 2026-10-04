@@ -4,11 +4,13 @@ import { usePaginatedInfiniteQuery } from "@/hooks/usefetchquery";
 import useAuthMutation from "@/hooks/usemutation";
 import { userStore } from "@/stores/userstore";
 import { smallHolder } from "@/types/farmers";
-import { handleAuthApiError } from "@/utils/apierrorhandler";
+import { handleGenericApiError } from "@/utils/apierrorhandler";
 import { dataDecoder, handleToastShow } from "@/utils/commonmethods";
 import { getAddFarmSource, getFarmerListSource } from "@/utils/farmdatasource";
+import { buildFarmPayload } from "@/utils/farmform";
+import { joinFullName } from "@/utils/farmerhelpers";
 import { isFieldOfficerExperience } from "@/utils/userroles";
-import { addFarmSchema } from "@/utils/validationschema";
+import { getAddFarmSchema } from "@/utils/validationschema";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import { useFormik } from "formik";
@@ -70,7 +72,9 @@ const AddFarm = () => {
       },
 
       onError: (error: any) => {
-        handleAuthApiError(error, formik, toast);
+        // Shows the server's own message (e.g. which field was rejected)
+        // instead of a generic sign-in style error.
+        handleGenericApiError(error, toast);
       },
     }
   );
@@ -80,6 +84,10 @@ const AddFarm = () => {
       apply_for:
         preselectedFarmer || isFieldOfficer ? "my_farmer" : "myself",
       farmer_ids: preselectedFarmer ? [preselectedFarmer.id] : ([] as number[]),
+      // Field officers / admins choose ONE farmer from a searchable list
+      // (like the web form). `farmer_label` only lets the picker show a name.
+      farmer: preselectedFarmer ? String(preselectedFarmer.id) : "",
+      farmer_label: preselectedFarmer ? joinFullName(preselectedFarmer) : "",
       farm_type: "external",
       name: "",
       location: "",
@@ -88,15 +96,19 @@ const AddFarm = () => {
       size: "",
       size_metric: sizeMetrics[0]?.id || "",
       land_ownership: "",
+      other_specification: "",
       crops: [],
       livestock: [],
       use_of_fertilizers: [],
       farming_methods: [],
       irrigation: false,
       has_access_to_market: false,
+      labor_force_total: "",
+      labor_force_male: "",
+      labor_force_female: "",
       boundary: [] as { latitude: number; longitude: number }[],
     },
-    validationSchema: addFarmSchema,
+    validationSchema: getAddFarmSchema({ isFieldOfficer }),
     onSubmit: async (values) => {
       // Boundary is optional - it's only used for the Geofencing/asset-
       // tracking feature (confirmed with backend: weather and soil
@@ -113,25 +125,18 @@ const AddFarm = () => {
         return;
       }
       const boundary = pointsToGeoJSON(boundaryPoints);
-      const withBoundary = boundary ? { ...rest, boundary } : rest;
 
-      if (isFieldOfficer) {
-        // The lead-farmer endpoint takes `apply_for` + `farmer_ids` (an
-        // array, since a lead farmer picks from a checklist); the admin
-        // farm-management endpoint has no such concept and just wants a
-        // single `farmer` id. Known limitation: if more than one farmer is
-        // checked, only the first is used - the checklist UI is shared
-        // with the lead-farmer flow and doesn't (yet) restrict field
-        // officers to a single selection.
-        const { apply_for, farmer_ids, ...adminRest } = withBoundary;
-        mutate({
-          ...adminRest,
-          farmer: farmer_ids?.[0] ?? null,
-        });
-        return;
-      }
-
-      mutate(withBoundary);
+      // Field officers use the admin farm endpoint, so the body matches what
+      // the web dashboard sends (one `farmer`, lowercase land ownership,
+      // "other" specification, labour force). Lead farmers' body is unchanged
+      // apart from the new labour-force fields.
+      mutate(
+        buildFarmPayload(rest, {
+          webFormat: isFieldOfficer,
+          farmerId: isFieldOfficer ? Number(values.farmer) : undefined,
+          boundary,
+        })
+      );
     },
   });
 
@@ -151,6 +156,7 @@ const AddFarm = () => {
       isLeaderFarmer={isLeaderFarmer}
       isFieldOfficer={isFieldOfficer}
       recentlyAddedFarmers={recentlyAddedFarmers}
+      webFormat={isFieldOfficer}
     />
   );
 };

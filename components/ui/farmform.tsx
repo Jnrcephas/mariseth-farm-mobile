@@ -19,6 +19,12 @@ import Select from "./select";
 import SelectModal from "./selectmodal";
 import SmallFarmerCard from "./smallfarmercard";
 import FarmBoundaryCapture, { BoundaryPoint } from "./farmboundarycapture";
+import RemoteSelector from "./remoteselector";
+import { endpoints } from "@/constants/endpoints";
+import {
+  LAND_OWNERSHIP_LEGACY_OPTIONS,
+  LAND_OWNERSHIP_WEB_OPTIONS,
+} from "@/constants/farmform";
 
 interface farmFormProps {
   formik: FormikProps<any>;
@@ -31,6 +37,10 @@ interface farmFormProps {
    * but never the "myself" vs "my farmer" toggle (see isLeaderFarmer). */
   isFieldOfficer?: boolean;
   recentlyAddedFarmers?: smallHolder[];
+  /** Use the web/admin-endpoint option set (land ownership incl. "Other").
+   * True for field officers adding and for every edit; false keeps the
+   * lead-farmer add flow exactly as it was. */
+  webFormat?: boolean;
 }
 
 const FarmForm: React.FC<farmFormProps> = ({
@@ -41,11 +51,14 @@ const FarmForm: React.FC<farmFormProps> = ({
   isLeaderFarmer = false,
   isFieldOfficer = false,
   recentlyAddedFarmers = [],
+  webFormat = false,
 }) => {
   const bottomInset = useSafeAreaInsets().bottom;
   const isAddMode = type === "add";
   const isMyFarmer = formik.values.apply_for === "my_farmer";
-  const canPickFarmer = isLeaderFarmer || isFieldOfficer;
+  const isOtherOwnership =
+    String(formik.values.land_ownership ?? "").toLowerCase() === "other";
+  const showSubmitHint = formik.submitCount > 0 && !formik.isValid;
 
   // Measured height of the absolutely-positioned footer, so the scroll
   // content can reserve exactly enough space and nothing ends up hidden
@@ -94,6 +107,33 @@ const FarmForm: React.FC<farmFormProps> = ({
         ]}
       >
         <View style={styles.formSection}>
+          {/* Field officers pick the farmer who owns the farm from a
+              searchable list of ALL farmers (same as the web form). This
+              replaces the old 7-item "recently added" checklist, which meant
+              a farm could only be assigned to the newest few farmers. */}
+          {isAddMode && isFieldOfficer ? (
+            <>
+              <RemoteSelector
+                label="Select Farmer"
+                placeholder="Search for a farmer"
+                field="farmer"
+                labelField="farmer_label"
+                formik={formik}
+                endpoint={endpoints.adminFarmers}
+                mapItem={(item) => ({
+                  id: item.id,
+                  name: [item.first_name, item.last_name]
+                    .filter(Boolean)
+                    .join(" "),
+                })}
+                required
+              />
+              <FormErrorMessage
+                error={(formik.touched.farmer && formik.errors.farmer) as string}
+              />
+            </>
+          ) : null}
+
           {isAddMode && isLeaderFarmer ? (
             <>
               <ApplyForSelector
@@ -178,7 +218,7 @@ const FarmForm: React.FC<farmFormProps> = ({
             field="district"
             formik={formik}
             value={formik.values.district}
-            searchable={true}   // ← add this
+            searchable={true}
           />
 
           <FormErrorMessage error={formik.errors.district} />
@@ -216,7 +256,11 @@ const FarmForm: React.FC<farmFormProps> = ({
           <SelectModal
             label={"Land Ownership"}
             placeholder={"Select"}
-            data={["Owned", "Leased", "Communal", "Rented"]}
+            data={
+              webFormat
+                ? LAND_OWNERSHIP_WEB_OPTIONS
+                : LAND_OWNERSHIP_LEGACY_OPTIONS
+            }
             field={"land_ownership"}
             formik={formik}
             value={formik.values.land_ownership}
@@ -228,6 +272,37 @@ const FarmForm: React.FC<farmFormProps> = ({
                 formik.errors.land_ownership) as string
             }
           />
+
+          {webFormat && isOtherOwnership ? (
+            <>
+              <AppTextInput
+                error={
+                  formik.touched.other_specification &&
+                  formik.errors.other_specification
+                }
+                label="Please specify land ownership"
+                placeholder="type here"
+                style={{
+                  backgroundColor: isLoading
+                    ? colors.backgroundTertiary
+                    : colors.backgroundPrimary,
+                }}
+                required
+                value={formik.values.other_specification}
+                autoCorrect={false}
+                editable={!isLoading}
+                keyboardType="default"
+                onBlur={() => formik.setFieldTouched("other_specification")}
+                onChangeText={formik.handleChange("other_specification")}
+              />
+              <FormErrorMessage
+                error={
+                  (formik.touched.other_specification &&
+                    formik.errors.other_specification) as string
+                }
+              />
+            </>
+          ) : null}
 
           <FarmProductsSelector
             label="Main Crops"
@@ -317,6 +392,39 @@ const FarmForm: React.FC<farmFormProps> = ({
                 formik.errors.has_access_to_market) as string
             }
           />
+
+          <AppText fontFamily="SemiBold" fontSize={16} color="black">
+            Labour Force
+          </AppText>
+          {(
+            [
+              ["labor_force_total", "Total Number of Workers", "e.g. 10"],
+              ["labor_force_male", "Number of Males", "e.g. 6"],
+              ["labor_force_female", "Number of Females", "e.g. 4"],
+            ] as const
+          ).map(([field, label, placeholder]) => (
+            <React.Fragment key={field}>
+              <AppTextInput
+                error={formik.touched[field] && formik.errors[field]}
+                label={label}
+                placeholder={placeholder}
+                style={{
+                  backgroundColor: isLoading
+                    ? colors.backgroundTertiary
+                    : colors.backgroundPrimary,
+                }}
+                value={formik.values[field]}
+                autoCorrect={false}
+                editable={!isLoading}
+                keyboardType="number-pad"
+                onBlur={() => formik.setFieldTouched(field)}
+                onChangeText={formik.handleChange(field)}
+              />
+              <FormErrorMessage
+                error={(formik.touched[field] && formik.errors[field]) as string}
+              />
+            </React.Fragment>
+          ))}
         </View>
 
         <View style={[styles.formSection, { marginBottom: 60 }]}>
@@ -339,7 +447,7 @@ const FarmForm: React.FC<farmFormProps> = ({
           />
         </View>
 
-        {isAddMode && canPickFarmer && recentlyAddedFarmers.length > 0 ? (
+        {isAddMode && isLeaderFarmer && recentlyAddedFarmers.length > 0 ? (
           <View style={styles.recentlyAddedSection}>
             <AppText fontFamily="SemiBold" fontSize={16} color="black">
               Recently Added
@@ -372,6 +480,17 @@ const FarmForm: React.FC<farmFormProps> = ({
         style={[styles.footer, { paddingBottom: bottomInset + 23 }]}
         onLayout={(e) => setFooterHeight(e.nativeEvent.layout.height)}
       >
+        {showSubmitHint ? (
+          <AppText
+            fontFamily="Medium"
+            fontSize={13}
+            color="error"
+            style={{ textAlign: "center", marginBottom: 10 }}
+          >
+            Some required fields are missing or invalid. Please check the
+            fields marked in red.
+          </AppText>
+        ) : null}
         <AppButton
           title={isAddMode ? "Add Farm" : "Save Changes"}
           textColor="white"
@@ -379,7 +498,10 @@ const FarmForm: React.FC<farmFormProps> = ({
           borderRadius={8}
           onPress={formik.submitForm}
           loading={isLoading}
-          disabled={!(formik.isValid && formik.dirty)}
+          // Add: pressing with missing fields is allowed on purpose - Formik
+          // then marks every field as touched so each problem shows its
+          // message (a button disabled until valid left people guessing).
+          disabled={!isAddMode && !formik.dirty}
         />
       </View>
     </View>

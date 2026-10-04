@@ -1,4 +1,5 @@
 import { width } from "@/constants/generalconstants";
+import { formatLabourForce, formatLandOwnership } from "@/utils/farmform";
 import { userStore } from "@/stores/userstore";
 import { myFarm } from "@/types/farm";
 import { dataEncoder } from "@/utils/commonmethods";
@@ -66,7 +67,13 @@ const FarmDetails: React.FC<farmDetailsProps> = React.memo(({ item }) => {
       },
       {
         key: "Land Ownership",
-        value: displayValue(item?.land_ownership),
+        value: displayValue(
+          formatLandOwnership(item?.land_ownership, item?.other_specification)
+        ),
+      },
+      {
+        key: "Labour Force",
+        value: displayValue(formatLabourForce(item)),
       },
       {
         key: "Livestock Kept",

@@ -343,80 +343,39 @@ export const applyCreditSchema = yup.object().shape({
   input_credit: yup.string().required("Type is required"),
 });
 
-export const addFarmSchema = yup.object().shape({
-  apply_for: yup
+// Shared by the add and edit farm schemas (web: externalFarmSchema).
+const farmCommonFields = {
+  farm_type: yup.string().required("Farm Type is required"),
+  name: yup
     .string()
-    .oneOf(["myself", "my_farmer"])
-    .required("Apply for is required"),
-  farmer_ids: yup.array().when("apply_for", {
-    is: "my_farmer",
+    .trim()
+    .min(2, "Farm name must be at least 2 characters")
+    .required("Farm Name is required"),
+  location: yup
+    .string()
+    .trim()
+    .min(2, "Location must be at least 2 characters")
+    .required("Farm Location is required"),
+  region: yup.string().required("Region is required"),
+  district: yup.string().required("District is required"),
+  size: yup
+    .string()
+    .required("Total Land Size is required")
+    .matches(/^\d+(\.\d+)?$/, "Total Land Size must be a number"),
+
+  size_metric: yup.string(),
+
+  land_ownership: yup.string().required("Land Ownership is required"),
+  // "Other" needs a description (web: other_land_ownership, min 2 chars).
+  other_specification: yup.string().when("land_ownership", {
+    is: (value: string) => String(value ?? "").toLowerCase() === "other",
     then: (schema) =>
       schema
-        .min(1, "Select at least one farmer")
-        .required("Select at least one farmer"),
+        .trim()
+        .min(2, "Please specify (at least 2 characters)")
+        .required("Please specify the land ownership"),
     otherwise: (schema) => schema.notRequired(),
   }),
-  farm_type: yup.string().required("Farm Type is required"),
-  name: yup.string().required("Farm Name  is required"),
-  location: yup.string().required("Farm Location is required"),
-  region: yup.string().required("Region is required"),
-  district: yup.string().required("District is required"),
-  size: yup
-    .string()
-    .required("Total Land Size is required")
-    .matches(
-      /^\d+(\.\d+)?$/,
-      "Total Land Size must be a number"
-    ),
-
-  size_metric: yup.string(),
-
-  land_ownership: yup.string().required("Land Owndership is required"),
-  // main_crops: yup.string().required("Main Crops is required"),
-  // livestock_kept: yup.string().required("This is a required field"),
-  crops: yup.array().of(yup.string().required()).optional(),
-
-  //  crops: yup
-  // .array()
-  // .of(yup.string().required())
-  // .min(1, "Please select at least one crop")
-  // .required("Main Crops is required"),
-
-  livestock: yup.array().of(yup.string().required()).optional(),
-  // livestock: yup
-  //   .array()
-  //   .of(yup.string().required())
-  //   .min(1, "Please select at least one livestock option")
-  //   .required("Livestock is required"),
-  use_of_fertilizers: yup
-    .array()
-    .of(yup.string().required())
-    .required("This is a required field"),
-  farming_methods: yup
-    .array()
-    .of(yup.string().required())
-    .required("This is a required field"),
-  irrigation: yup.boolean().required("This is a required field"),
-  has_access_to_market: yup.boolean().required("This is a required field"),
-});
-
-export const adddFarmerSchema = yup.object().shape({
-  farm_type: yup.string().required("Farm Type is required"),
-  name: yup.string().required("Farm Name  is required"),
-  location: yup.string().required("Farm Location is required"),
-  region: yup.string().required("Region is required"),
-  district: yup.string().required("District is required"),
-  size: yup
-    .string()
-    .required("Total Land Size is required")
-    .matches(
-      /^\d+(\.\d+)?$/,
-      "Total Land Size must be a number"
-    ),
-
-  size_metric: yup.string(),
-
-  land_ownership: yup.string().required("Land Owndership is required"),
   crops: yup.array().of(yup.string().required()).optional(),
   livestock: yup.array().of(yup.string().required()).optional(),
   use_of_fertilizers: yup
@@ -429,4 +388,45 @@ export const adddFarmerSchema = yup.object().shape({
     .required("This is a required field"),
   irrigation: yup.boolean().required("This is a required field"),
   has_access_to_market: yup.boolean().required("This is a required field"),
-});
+
+  labor_force_total: optionalWholeNumber("Total number of workers"),
+  labor_force_male: optionalWholeNumber("Number of males"),
+  labor_force_female: optionalWholeNumber("Number of females"),
+};
+
+/**
+ * Add farm. Lead farmers pick "myself" or tick farmers from their list
+ * (apply_for / farmer_ids). Field officers / admins don't have that choice:
+ * like the web form they must select one farmer to own the farm.
+ */
+export const getAddFarmSchema = ({
+  isFieldOfficer = false,
+}: { isFieldOfficer?: boolean } = {}) =>
+  yup.object().shape({
+    ...farmCommonFields,
+    apply_for: isFieldOfficer
+      ? yup.string().notRequired()
+      : yup
+          .string()
+          .oneOf(["myself", "my_farmer"])
+          .required("Apply for is required"),
+    farmer_ids: isFieldOfficer
+      ? yup.array().notRequired()
+      : yup.array().when("apply_for", {
+          is: "my_farmer",
+          then: (schema) =>
+            schema
+              .min(1, "Select at least one farmer")
+              .required("Select at least one farmer"),
+          otherwise: (schema) => schema.notRequired(),
+        }),
+    farmer: isFieldOfficer
+      ? yup.string().required("Please select a farmer")
+      : yup.string().notRequired(),
+  });
+
+// Kept so existing imports keep working.
+export const addFarmSchema = getAddFarmSchema();
+
+// Edit farm (the schema's name has an extra "d"; it is imported under it).
+export const adddFarmerSchema = yup.object().shape(farmCommonFields);

@@ -18,6 +18,7 @@ import {
   NUMBER_OF_FARMS_API_KEY,
 } from "@/constants/farmerform";
 import { dataDecoder, dataEncoder } from "@/utils/commonmethods";
+import { formatLabourForce, formatLandOwnership } from "@/utils/farmform";
 import {
   farmerTypeLabel,
   isEditableFarmerType,
@@ -195,7 +196,15 @@ const FarmerDetails = () => {
           ? `${data.farm.size} ${data.farm.size_metric?.name ?? ""}`.trim()
           : "N/A",
       },
-      { key: "Land Ownership", value: data?.farm?.land_ownership || "N/A" },
+      {
+        key: "Land Ownership",
+        value:
+          formatLandOwnership(
+            data?.farm?.land_ownership,
+            data?.farm?.other_specification
+          ) || "N/A",
+      },
+      { key: "Labour Force", value: formatLabourForce(data?.farm) || "N/A" },
       {
         key: "Livestock Kept",
         value:
