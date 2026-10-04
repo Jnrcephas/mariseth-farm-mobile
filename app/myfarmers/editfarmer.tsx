@@ -8,12 +8,15 @@ import { handleGenericApiError } from "@/utils/apierrorhandler";
 import { dataDecoder, handleToastShow } from "@/utils/commonmethods";
 import { getEditFarmerSource } from "@/utils/farmdatasource";
 import {
-  joinFullName,
-  normalizeFarmerPhone,
-  splitFullName,
-  toLocalPhone,
-} from "@/utils/farmerhelpers";
-import { addFarmerSchema } from "@/utils/validationschema";
+  buildFarmerPayload,
+  FarmerFormValues,
+  farmerTypeLabel,
+  getFarmerInitialValues,
+  isEditableFarmerType,
+  valuesToFarmerPatch,
+} from "@/utils/farmerform";
+import { isFieldOfficerExperience } from "@/utils/userroles";
+import { getAddFarmerSchema } from "@/utils/validationschema";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import { useFormik } from "formik";
@@ -30,120 +33,77 @@ const EditFarmer = () => {
   const params = useLocalSearchParams<{ data: string }>();
   const farmer: smallHolder | undefined = dataDecoder(params?.data);
 
+  const user = userStore((state) => state.user);
   const farms = userStore((state) => state.farms);
   const regions = userStore((state) => state.regions);
+  const isFieldOfficer = isFieldOfficerExperience(user);
+  // A lead farmer only ever edits their own farmers, so their id stays as
+  // the lead farmer. (Field officers keep whatever is selected in the form.)
+  const leadFarmerId = isFieldOfficer ? undefined : user?.farmer?.id;
 
   const toast = useToast();
   const queryClient = useQueryClient();
 
-  const districts = React.useMemo(
-    () =>
-      regions.flatMap((region) =>
-        region.districts.map((district) => ({
-          ...district,
-          regionId: region.id,
-        }))
-      ),
-    [regions]
-  );
-
   const { endpoint, queryKeys } = getEditFarmerSource(farmer?.id ?? "");
 
-  const { mutate, isLoading } = useAuthMutation(
-    endpoint,
-    "PUT",
-    "editFarmer",
-    {
-      onSuccess: async (_response: unknown, variables: any) => {
-        // Show the new values on the details screen immediately (it only
-        // holds a snapshot from its route param), then refresh the lists.
-        if (farmer?.id) {
-          const district = districts.find((d) => d.id === variables.district);
-          const region = regions.find((r) => r.id === variables.region);
-          useUniversalStore.setState((state) => ({
-            editedFarmers: {
-              ...state.editedFarmers,
-              [farmer.id]: {
-                first_name: variables.first_name,
-                last_name: variables.last_name,
-                other_names: variables.other_names,
-                gender: variables.gender,
-                date_of_birth: variables.date_of_birth,
-                id_type: variables.id_type,
-                id_number: variables.id_number,
-                phone_number: variables.phone_number,
-                email: variables.email ?? "",
-                address: variables.address,
-                village: variables.village,
-                ...(district ? { district: { id: district.id, name: district.name } } : {}),
-                ...(region
-                  ? { region: { id: region.id, name: region.name, code: region.code } }
-                  : {}),
-              },
-            },
-          }));
-        }
+  // Kept in a ref so the success callback (created before the form exists)
+  // can read the values that were just submitted.
+  const submittedRef = React.useRef<FarmerFormValues | null>(null);
 
-        handleToastShow(toast, "Farmer has been updated successfully!");
-        await Promise.all(
-          queryKeys.map((key) => queryClient.invalidateQueries({ queryKey: [key] }))
-        );
-        router.back();
-      },
-      onError: (error: unknown) => {
-        handleGenericApiError(error, toast);
-      },
-    }
-  );
+  const { mutate, isLoading } = useAuthMutation(endpoint, "PUT", "editFarmer", {
+    onSuccess: async () => {
+      // Show the new values on the details screen immediately (it only holds
+      // a snapshot from its route param), then refresh the lists.
+      if (farmer?.id && submittedRef.current) {
+        const patch = valuesToFarmerPatch(submittedRef.current, regions);
+        useUniversalStore.setState((state) => ({
+          editedFarmers: { ...state.editedFarmers, [farmer.id]: patch },
+        }));
+      }
 
-  const formik = useFormik({
-    initialValues: {
-      name: joinFullName(farmer),
-      gender: farmer?.gender ?? "",
-      email: farmer?.email ?? "",
-      address: farmer?.address ?? "",
-      village: farmer?.village ?? "",
-      // Region isn't an input on this form (it follows the chosen district),
-      // but the schema requires it - so if a record has a district and no
-      // region, derive it rather than leaving the form silently invalid.
-      region:
-        farmer?.region?.id ??
-        regions.find((r) =>
-          r.districts.some((d) => d.id === farmer?.district?.id)
-        )?.id ??
-        "",
-      district: farmer?.district?.id ?? "",
-      country: farmer?.country || "Ghana",
-      date_of_birth: farmer?.date_of_birth ?? "",
-      phone_number: toLocalPhone(farmer?.phone_number),
-      // Older records may have no id_type saved; Ghana Card was the only
-      // option the app offered before the selector existed.
-      id_type: farmer?.id_type || "ghana_card",
-      id_number: farmer?.id_number ?? "",
-      farm: farmer?.farm?.id ?? "",
-      // `type` only exists so addFarmerSchema's phone rule applies (it is
-      // skipped for the "profile" type). It is never sent.
-      type: "edit",
+      handleToastShow(
+        toast,
+        `${farmerTypeLabel(submittedRef.current?.farmer_type)} has been updated successfully!`
+      );
+      await Promise.all(
+        queryKeys.map((key) => queryClient.invalidateQueries({ queryKey: [key] }))
+      );
+      router.back();
     },
-    validationSchema: addFarmerSchema,
-    onSubmit: async (values) => {
-      const { name, type, ...rest } = values;
-      mutate({
-        ...rest,
-        ...splitFullName(name),
-        email: values.email.trim() || null,
-        phone_number: normalizeFarmerPhone(values.phone_number),
-        id_number: values.id_number.trim(),
-        farm: values.farm || null,
-        district: Number(values.district),
-        region: Number(values.region),
-      });
+    onError: (error: unknown) => {
+      handleGenericApiError(error, toast);
+    },
+  });
+
+  const formik = useFormik<FarmerFormValues>({
+    initialValues: getFarmerInitialValues(farmer),
+    // On edit the lead farmer stays optional: some admin responses only give
+    // the lead farmer's name, not an id we could pre-select, and we must not
+    // force (or silently change) the assignment.
+    validationSchema: getAddFarmerSchema({ requireLeadFarmer: false }),
+    onSubmit: (values) => {
+      submittedRef.current = values;
+      mutate(buildFarmerPayload(values, { leadFarmerId }));
     },
   });
 
   // Same safety net as editfarmdetails.tsx: if this screen is ever opened
   // without its `data` param, show a recoverable message instead of a blank
   // form that would silently PUT to `/farmer/`.
+  // Lead farmers (visible in a field officer's mixed list) have a different
+  // form on the web. Saving one through this form would overwrite their type.
+  if (farmer?.id && !isEditableFarmerType(farmer.type)) {
+    return (
+      <ErrorComponent
+        type="CLIENT_ERROR"
+        title="Can't edit this farmer here"
+        message={`${farmerTypeLabel(farmer.type)}s can't be edited from this form. Please use the web dashboard.`}
+        btnTitle="Go Back"
+        refetch={() => router.back()}
+      />
+    );
+  }
+
   if (!farmer?.id) {
     return (
       <ErrorComponent
@@ -161,8 +121,8 @@ const EditFarmer = () => {
       mode="edit"
       formik={formik}
       isLoading={isLoading}
-      districts={districts}
       farms={farms}
+      isFieldOfficer={isFieldOfficer}
     />
   );
 };

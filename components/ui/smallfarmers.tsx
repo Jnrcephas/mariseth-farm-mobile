@@ -1,4 +1,6 @@
 import { width } from "@/constants/generalconstants";
+import { userStore } from "@/stores/userstore";
+import { isFieldOfficerExperience } from "@/utils/userroles";
 import React from "react";
 import { View } from "react-native";
 import AppText from "./apptext";
@@ -20,6 +22,12 @@ const SmallFarmers: React.FC<smallFarmersProps> = ({
   refetch,
   isRefetching,
 }) => {
+  // A lead farmer's list is only their smallholders; a field officer's list
+  // mixes smallholder, commercial (and lead) farmers.
+  const user = userStore((state) => state.user);
+  const listTitle = isFieldOfficerExperience(user)
+    ? "Farmers"
+    : "Smallholder Farmers";
   // const RenderFooter = () => {
   //   if (isFetchingNextPage) {
   //     return (
@@ -56,7 +64,7 @@ const SmallFarmers: React.FC<smallFarmersProps> = ({
           color="primary"
           style={{ marginBottom: 7 }}
         >
-          Smallholder Farmers
+          {listTitle}
         </AppText>
       ) : null}
 

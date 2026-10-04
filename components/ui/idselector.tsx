@@ -15,6 +15,9 @@ interface IDSelectorProps {
   data: { name: string; value: string }[];
   field: string;
   formik: FormikProps<any>;
+  /** Shows the red asterisk. Defaults to true, as before. */
+  required?: boolean;
+  searchable?: boolean;
 }
 
 const IDSelector: React.FC<IDSelectorProps> = ({
@@ -23,6 +26,8 @@ const IDSelector: React.FC<IDSelectorProps> = ({
   data,
   field,
   formik,
+  required = true,
+  searchable = false,
 }) => {
   const selectModalVisible = useUniversalStore(
     (state) => state.selectModalVisible
@@ -36,6 +41,11 @@ const IDSelector: React.FC<IDSelectorProps> = ({
         [field]: value,
       },
     }));
+    // Closing the picker counts as "visited" so a required field left empty
+    // can show its error.
+    if (!value) {
+      formik.setFieldTouched(field, true, false);
+    }
   };
 
   const selectedItem = data.find((item) => item.value === formik.values[field]);
@@ -49,6 +59,8 @@ const IDSelector: React.FC<IDSelectorProps> = ({
           onClose={() => handleVisibility(false)}
           label={label}
           data={data}
+          searchable={searchable}
+          searchPlaceholder={`Search ${label.toLowerCase()}...`}
           keyExtractor={(item, index) => index?.toString() as string}
           renderItem={({ item, index }) => (
             <TouchableHighlight
@@ -107,14 +119,16 @@ const IDSelector: React.FC<IDSelectorProps> = ({
             {label}
           </AppText>
 
-          <AppText
-            fontSize={14}
-            color="error"
-            fontFamily="SemiBold"
-            style={{ marginLeft: 4 }}
-          >
-            *
-          </AppText>
+          {required ? (
+            <AppText
+              fontSize={14}
+              color="error"
+              fontFamily="SemiBold"
+              style={{ marginLeft: 4 }}
+            >
+              *
+            </AppText>
+          ) : null}
         </View>
 
         <Pressable

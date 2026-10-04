@@ -54,6 +54,7 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
   value,
   editable = true,
   keyboardType,
+  autoCapitalize = "none",
   ...textInputProps
 }) => {
   const [isPasswordVisible, setPasswordVisible] = useState(false);
@@ -144,7 +145,9 @@ const AppTextInput: React.FC<AppTextInputProps> = ({
           value={value ?? ""}
           editable={editable}
           secureTextEntry={useSecureEntry}
-          autoCapitalize="none"
+          // Was hard-coded to "none" after the spread, which silently ignored
+          // every autoCapitalize="words" / "characters" passed by the forms.
+          autoCapitalize={autoCapitalize}
           autoCorrect={false}
           underlineColorAndroid="transparent"
           showSoftInputOnFocus={showSoftInputOnFocus}

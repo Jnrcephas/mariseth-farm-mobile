@@ -7,6 +7,8 @@ export const endpoints = {
   adminSignIn: "accounts/auth/login",
 
   adminFarmers: "farm-management/farmer",
+  // Project picker on the farmer form (same endpoint the web admin app uses).
+  projects: "farm-management/projects",
   adminFarms: "farm-management/farm",
   
   updatePassword: "accounts/auth/update_password",

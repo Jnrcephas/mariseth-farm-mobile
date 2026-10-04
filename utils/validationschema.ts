@@ -187,41 +187,117 @@ export const profileEditSchema = yup.object().shape({
 
 const farmerPhoneRegExp = /^[\d\s]+$/;
 
-export const addFarmerSchema = yup.object().shape({
-  name: yup.string().required("Name is required"),
-  type: yup.string().required("Type is required"),
-  gender: yup
+// Optional phone: blank is fine, but if something is typed it must be a
+// plausible Ghana number (9 or 10 digits, spaces allowed).
+const optionalPhone = (label: string) =>
+  yup
     .string()
-    .oneOf(["m", "f"], "Please select gender")
-    .required("Gender is required"),
-  date_of_birth: yup.string().required("Date of Birth is required"),
-  id_type: yup
-    .string()
-    .oneOf(["ghana_card", "passport"], "Please select an ID type")
-    .required("ID Type is required"),
-  id_number: yup.string().required("National ID/Passport Number is required"),
+    .notRequired()
+    .test(
+      "phone-digits",
+      `${label} must contain only digits`,
+      (value) => !value || farmerPhoneRegExp.test(value)
+    )
+    .test("phone-length", `${label} must be 9 or 10 digits`, (value) => {
+      if (!value) return true;
+      const digits = value.replace(/\s/g, "");
+      return digits.length === 9 || digits.length === 10;
+    });
 
-  phone_number: yup.string().when("type", {
-    is: (type: string) => type !== "profile",
-    then: (schema) =>
-      schema
-        .required("Contact Number is required")
-        .matches(farmerPhoneRegExp, "Contact Number must contain only digits")
-        .test("valid-length", "Contact Number must be 9 or 10 digits", (value) => {
-          const digits = value?.replace(/\s/g, "") ?? "";
-          return digits.length === 9 || digits.length === 10;
-        }),
-    otherwise: (schema) => schema.notRequired(),
-  }),
-  email: yup.string().notRequired().email("Invalid email address"),
+const optionalWholeNumber = (label: string) =>
+  yup.string().notRequired().matches(/^\d+$/, {
+    message: `${label} must be a whole number`,
+    excludeEmptyString: true,
+  });
 
-  address: yup.string().required("Address is required"),
-  village: yup.string().required("Village/Community is required"),
-  district: yup.string().required("District is required"),
-  region: yup.string().required("Region is required"),
+/**
+ * Farmer registration (add + edit). Mirrors the web admin form's
+ * smallholderFarmerSchema (src/modules/FarmManagement/utils/validations.ts):
+ * names, gender, date of birth, address, village, region, district and
+ * country are required; ID, phone, email and everything under "Profile
+ * Details" / "Support & Assistance" are optional.
+ *
+ * `requireLeadFarmer`: the web form requires picking a lead farmer for a
+ * smallholder (not for a commercial farmer). Lead farmers don't pick one (their
+ * own id is sent automatically), so it's only turned on for a field officer /
+ * admin adding a new farmer.
+ */
+export const getAddFarmerSchema = ({
+  requireLeadFarmer = false,
+}: { requireLeadFarmer?: boolean } = {}) =>
+  yup.object().shape({
+    first_name: yup
+      .string()
+      .trim()
+      .min(2, "First name must be at least 2 characters")
+      .required("First name is required"),
+    last_name: yup
+      .string()
+      .trim()
+      .min(2, "Last name must be at least 2 characters")
+      .required("Last name is required"),
+    other_names: yup.string().notRequired(),
+    gender: yup
+      .string()
+      .oneOf(["m", "f"], "Please select gender")
+      .required("Gender is required"),
+    date_of_birth: yup.string().required("Date of Birth is required"),
 
-  farm: yup.string().notRequired(),
-});
+    id_type: yup.string().notRequired(),
+    id_number: yup.string().notRequired(),
+    phone_number: optionalPhone("Contact Number"),
+    email: yup.string().notRequired().email("Invalid email address"),
+
+    address: yup.string().trim().required("Address is required"),
+    village: yup.string().trim().required("Village/Community is required"),
+
+    has_disability: yup
+      .boolean()
+      .nullable()
+      .required("Please select Yes or No"),
+    disability_details: yup.string().notRequired(),
+
+    region: yup.string().required("Region is required"),
+    district: yup.string().required("District is required"),
+    country: yup.string().required("Country is required"),
+
+    farm: yup.string().notRequired(),
+    project: yup.string().notRequired(),
+    farmer_type: yup
+      .string()
+      .oneOf(["smallholder", "commercial"], "Please select a farmer type")
+      .required("Farmer type is required"),
+    // Commercial farmers have no lead farmer, so it is never required for them.
+    lead_farmer: yup.string().when("farmer_type", {
+      is: "commercial",
+      then: (schema) => schema.notRequired(),
+      otherwise: (schema) =>
+        requireLeadFarmer
+          ? schema.required("Please select a lead farmer")
+          : schema.notRequired(),
+    }),
+
+    nationality: yup.string().notRequired(),
+    marital_status: yup.string().notRequired(),
+    education_level: yup.string().notRequired(),
+    alternative_phone_number: optionalPhone("Alternative Phone Number"),
+    average_income: yup.string().notRequired().matches(/^\d+(\.\d{1,2})?$/, {
+      message: "Enter a valid amount, e.g. 1500 or 1500.50",
+      excludeEmptyString: true,
+    }),
+    years_of_experience: optionalWholeNumber("Years of experience"),
+    number_of_households: optionalWholeNumber("Number of households"),
+    number_of_dependents: optionalWholeNumber("Number of dependents"),
+    number_of_farms: optionalWholeNumber("Number of farms"),
+    consent: yup.boolean().notRequired(),
+
+    has_received_support: yup.boolean().nullable().notRequired(),
+    support_received: yup.string().notRequired(),
+    areas_of_needed_assistance: yup.string().notRequired(),
+  });
+
+// Kept so existing imports keep working.
+export const addFarmerSchema = getAddFarmerSchema();
 
 export const leadershipExperienceEditSchema = yup.object().shape({
   is_mentoring_other_farmers: yup.boolean().required("This field is required"),

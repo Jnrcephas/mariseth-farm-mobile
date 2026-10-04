@@ -12,7 +12,18 @@ import { useUniversalStore } from "@/stores/useuniversalstore";
 import { userStore } from "@/stores/userstore";
 import { livestockKept } from "@/types/farm";
 import { smallHolder } from "@/types/farmers";
+import {
+  EDUCATION_LEVEL_OPTIONS,
+  MARITAL_STATUS_OPTIONS,
+  NUMBER_OF_FARMS_API_KEY,
+} from "@/constants/farmerform";
 import { dataDecoder, dataEncoder } from "@/utils/commonmethods";
+import {
+  farmerTypeLabel,
+  isEditableFarmerType,
+  normalizeIdType,
+  optionLabel,
+} from "@/utils/farmerform";
 import { getFarmListSource } from "@/utils/farmdatasource";
 import { canManageFarmersAndFarms } from "@/utils/userroles";
 import { differenceInDays, format, parseISO } from "date-fns";
@@ -70,7 +81,10 @@ const FarmerDetails = () => {
   // This list is already scoped by the backend (a lead farmer only ever sees
   // their own smallholders; field officers/admins see the ones they manage),
   // so anyone allowed to manage farmers may edit what's shown here.
-  const canEditFarmer = canManageFarmersAndFarms(user);
+  // The edit form only handles smallholder and commercial farmers; a field
+  // officer's mixed list also holds lead farmers (see isEditableFarmerType).
+  const canEditFarmer =
+    canManageFarmersAndFarms(user) && isEditableFarmerType(data?.type);
 
   const farmerPersonalInformation = {
     headerTitle: "Personal Information",
@@ -91,7 +105,9 @@ const FarmerDetails = () => {
           ? format(parseISO(data.date_of_birth), "do MMMM, yyyy")
           : "N/A",
       },
-      { key: "National ID/Passport Number", value: data?.id_number || "N/A" },
+      { key: "Farmer Type", value: farmerTypeLabel(data?.type) },
+      { key: "ID Type", value: normalizeIdType(data?.id_type) || "N/A" },
+      { key: "ID Number", value: data?.id_number || "N/A" },
       {
         key: "Contact Number",
         value: data?.phone_number ? `+${data.phone_number}` : "N/A",
@@ -108,14 +124,64 @@ const FarmerDetails = () => {
     ],
   };
 
+  // Mirrors the web admin's "Project & Profile Details" card. Records made
+  // before the updated form (or endpoints that don't return these yet) just
+  // show "-".
+  const show = (value: unknown) =>
+    value === undefined || value === null || value === "" ? "-" : String(value);
+  const projectName =
+    typeof data?.project === "object" && data.project
+      ? data.project.name
+      : undefined;
+
+  const farmerProfileInformation = {
+    headerTitle: "Project & Profile Details",
+    headerIcon: icons.user,
+    information: [
+      { key: "Project", value: show(projectName) },
+      { key: "Nationality", value: show(data?.nationality) },
+      {
+        key: "Marital Status",
+        value: show(optionLabel(MARITAL_STATUS_OPTIONS, data?.marital_status)),
+      },
+      {
+        key: "Education Level",
+        value: show(optionLabel(EDUCATION_LEVEL_OPTIONS, data?.education_level)),
+      },
+      {
+        key: "Alternative Phone Number",
+        value: data?.alternative_phone_number
+          ? `+${data.alternative_phone_number}`
+          : "-",
+      },
+      {
+        key: "Average Income",
+        value:
+          data?.average_income != null && data.average_income !== ""
+            ? `GH₵${data.average_income}`
+            : "-",
+      },
+      { key: "Years of Farming Experience", value: show(data?.years_of_experience) },
+      { key: "Number of Households", value: show(data?.number_of_households) },
+      { key: "Number of Dependents", value: show(data?.number_of_dependents) },
+      { key: "Number of Farms", value: show((data as any)?.[NUMBER_OF_FARMS_API_KEY]) },
+      { key: "Data Consent Given", value: data?.consent ? "Yes" : "No" },
+    ],
+  };
+
   const farmInformation = {
     headerTitle: "Farm Information",
     headerIcon: icons.user,
-    // No onEditPress on purpose: this used to be an empty `() => {}` (a
-    // second dead Edit button). The only farm editor in the app,
-    // app/myfarm/editfarmdetails.tsx, saves to the *signed-in user's own*
-    // farm id, so pointing it at a smallholder's farm would overwrite the
-    // wrong record. Re-add once that screen can target a farm by id.
+    // Opens the shared Edit Farm screen on THIS farmer's farm. (It used to be
+    // an empty `() => {}`. The edit screen now saves to the farm it is given,
+    // rather than always to the signed-in user's own farm.)
+    onEditPress:
+      canEditFarmer && data?.farm?.id
+        ? () =>
+            router.navigate(
+              `/myfarm/editfarmdetails?data=${dataEncoder(data.farm)}&farmerId=${data.id}`
+            )
+        : undefined,
     information: [
       { key: "Farm Name", value: data?.farm?.name || "N/A" },
       {
@@ -160,6 +226,7 @@ const FarmerDetails = () => {
         >
           <View style={styles.segmentPanel}>
             <InfoCard headerVisibility={true} info={farmerPersonalInformation} />
+            <InfoCard headerVisibility={true} info={farmerProfileInformation} />
           </View>
 
           <View style={styles.segmentPanel}>

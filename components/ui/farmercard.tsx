@@ -1,6 +1,7 @@
 import { colors } from "@/constants/colors";
 import { icons } from "@/constants/icons";
 import { images } from "@/constants/images";
+import { farmerTypeLabel } from "@/utils/farmerform";
 import { Image } from "expo-image";
 import React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -41,7 +42,7 @@ const FarmerCard: React.FC<farmerCard> = ({
       title: name,
       phone: `+${item?.phone_number}`,
       count: "",
-      subtitle: "Smallholder Farmer",
+      subtitle: farmerTypeLabel(item?.type),
       abstractImage: images.otherLooper,
       abtractStyle: styles.otherLooper,
     },

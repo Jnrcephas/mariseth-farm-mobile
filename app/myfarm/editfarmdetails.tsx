@@ -16,7 +16,10 @@ import { StyleSheet } from "react-native";
 import { useToast } from "react-native-toast-notifications";
 
 const EditFarmDetails = () => {
-  const params = useLocalSearchParams<{ data: string }>();
+  // `farmerId` is only passed when a lead farmer / field officer is editing a
+  // *farmer's* farm from the farmer details screen (see farmerdetails.tsx).
+  const params = useLocalSearchParams<{ data: string; farmerId?: string }>();
+  const isEditingFarmersFarm = !!params?.farmerId;
   const farmData: myFarm1 | undefined = dataDecoder(params?.data);
 
   // console.log("Farm Data:", params?.data);
@@ -47,7 +50,10 @@ const EditFarmDetails = () => {
 
   const queryClient = useQueryClient();
   const { mutate, isLoading, error } = useAuthMutation(
-  `${endpoints.adminFarms}/${user?.farmer?.farm?.id}`,
+  // Save to the farm we were handed. This used to always use the signed-in
+  // user's own farm id, which would have overwritten the wrong record when
+  // editing a smallholder's farm. For "My Farm" the two ids are the same.
+  `${endpoints.adminFarms}/${farmData?.id ?? user?.farmer?.farm?.id}`,
   "PUT",
   "editfarmdetails",
     {
@@ -55,12 +61,23 @@ const EditFarmDetails = () => {
         // console.log(JSON.stringify(data));
         const toastMessage = "Farm details updated successfully!";
         handleToastShow(toast, toastMessage);
-        await queryClient
-          .invalidateQueries({ queryKey: ["myfarm"] })
-          .then(() => {
-            // userStore.setState({ user: { ...user  } });
-            router.back();
-          });
+        await Promise.all(
+          // "myfarm" is the signed-in farmer's own farm; the rest are the
+          // farm and farmer lists a farmer's farm also appears in.
+          ["myfarm", "leadfarmersfarms", "admin-farms", "smallholders", "admin-farmers"].map(
+            (key) => queryClient.invalidateQueries({ queryKey: [key] })
+          )
+        );
+        if (isEditingFarmersFarm) {
+          // The farmer details screen only holds a snapshot of the farmer
+          // (including this farm), so go back to the refreshed farmers list
+          // instead of to a screen that would still show the old values.
+          // (navigate pops back to the list tab, across the myfarm and
+          // myfarmers stacks - same call the Home tab uses to reach it.)
+          router.navigate("/myfarmers");
+        } else {
+          router.back();
+        }
       },
       onError: (error: any) => {
         console.log(error);
