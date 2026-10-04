@@ -71,6 +71,10 @@ export interface myFarm {
   created_by: number;
   date_created: string;
   products: farmProduct[];
+  // Added with the updated farm form (mirrors the web admin app).
+  labor_force_total?: number | null;
+  labor_force_male?: number | null;
+  labor_force_female?: number | null;
 }
 
 export interface productCategory {
@@ -194,4 +198,8 @@ export type myFarm1 = {
   livestock: livestock[];
   farmer: farmer;
   boundary?: farmBoundary | null;
+  // Added with the updated farm form (mirrors the web admin app).
+  labor_force_total?: number | null;
+  labor_force_male?: number | null;
+  labor_force_female?: number | null;
 };

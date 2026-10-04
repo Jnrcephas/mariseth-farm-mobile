@@ -8,6 +8,7 @@ import { myFarm1 } from "@/types/farm";
 import { handleAuthApiError, handleGenericApiError } from "@/utils/apierrorhandler";
 import { dataDecoder, handleToastShow } from "@/utils/commonmethods";
 import { adddFarmerSchema } from "@/utils/validationschema";
+import { buildFarmPayload, normalizeLandOwnership } from "@/utils/farmform";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
 import { useFormik } from "formik";
@@ -41,7 +42,15 @@ const EditFarmDetails = () => {
     irrigation,
     size_metric,
     boundary,
+    other_specification,
+    labor_force_total,
+    labor_force_male,
+    labor_force_female,
   } = farmData || ({} as Partial<myFarm1>);
+
+  // Older records can hold "Rented" (not a valid choice on the API) - shown
+  // as "Other: Rented" so nothing is lost. See normalizeLandOwnership.
+  const ownership = normalizeLandOwnership(land_ownership, other_specification);
 
   const newCrops = (crops || []).map((crop) => crop?.product?.id);
   const newLivestock = (livestock || []).map((crop) => crop?.product?.id);
@@ -94,13 +103,17 @@ const EditFarmDetails = () => {
       district: district?.id || "",
       size: size?.toString() || "",
       size_metric: size_metric?.id,
-      land_ownership: land_ownership || "",
+      land_ownership: ownership.land_ownership,
+      other_specification: ownership.other_specification,
       crops: newCrops || [],
       livestock: newLivestock || [],
       use_of_fertilizers: use_of_fertilizers || [],
       farming_methods: farming_methods || [],
       irrigation: irrigation,
       has_access_to_market: has_access_to_market,
+      labor_force_total: labor_force_total?.toString() ?? "",
+      labor_force_male: labor_force_male?.toString() ?? "",
+      labor_force_female: labor_force_female?.toString() ?? "",
       boundary: geoJSONToPoints(boundary),
     },
     validationSchema: adddFarmerSchema,
@@ -120,7 +133,11 @@ const EditFarmDetails = () => {
         return;
       }
       const boundaryGeoJSON = pointsToGeoJSON(boundaryPoints);
-      mutate(boundaryGeoJSON ? { ...rest, boundary: boundaryGeoJSON } : rest);
+      // Edits always go to the admin farm endpoint, so use the web's body.
+      // (`farmer` is left out on purpose: editing must not reassign the farm.)
+      mutate(
+        buildFarmPayload(rest, { webFormat: true, boundary: boundaryGeoJSON })
+      );
     },
   });
 
@@ -157,6 +174,7 @@ const EditFarmDetails = () => {
       isLoading={isLoading}
       type="edit"
       districts={districts}
+      webFormat
     />
   );
 };
