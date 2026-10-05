@@ -38,6 +38,8 @@ export type FarmerFormValues = {
   village: string;
   has_disability: boolean | null;
   disability_details: string;
+  /** Yes/No, defaults to No so it never blocks a registration. */
+  is_refugee: boolean;
   region: number | string;
   district: number | string;
   country: string;
@@ -132,6 +134,8 @@ export const getFarmerInitialValues = (
     village: str(f.village),
     has_disability: toBoolOrNull(f.has_disability),
     disability_details: str(f.disability_details),
+    // Missing/null (new farmer, or a record from before this field) -> No.
+    is_refugee: toBoolOrNull(f.is_refugee) === true,
     region: idOf(f.region),
     district: idOf(f.district),
     country: str(f.country) || DEFAULT_COUNTRY,
@@ -213,6 +217,7 @@ export const buildFarmerPayload = (
     farm: values.farm || null,
     has_disability: hasDisability,
     disability_details: hasDisability ? text(values.disability_details) : undefined,
+    is_refugee: values.is_refugee === true,
     support_assistance: withoutUndefined({
       has_received_support: hasSupport,
       support_received: hasSupport ? text(values.support_received) : undefined,
@@ -292,6 +297,7 @@ export const valuesToFarmerPatch = (
     consent: values.consent === true,
     has_disability: hasDisability,
     disability_details: hasDisability ? values.disability_details.trim() : "",
+    is_refugee: values.is_refugee === true,
     support_assistance: {
       has_received_support: hasSupport,
       support_received: hasSupport ? values.support_received.trim() : "",

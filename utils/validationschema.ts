@@ -256,6 +256,7 @@ export const getAddFarmerSchema = ({
       .nullable()
       .required("Please select Yes or No"),
     disability_details: yup.string().notRequired(),
+    is_refugee: yup.boolean().notRequired(),
 
     region: yup.string().required("Region is required"),
     district: yup.string().required("District is required"),

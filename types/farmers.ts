@@ -51,4 +51,5 @@ export type smallHolder = {
   consent?: boolean;
   has_disability?: boolean | null;
   disability_details?: string | null;
+  is_refugee?: boolean | null;
 };
