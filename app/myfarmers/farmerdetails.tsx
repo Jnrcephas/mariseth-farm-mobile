@@ -107,6 +107,7 @@ const FarmerDetails = () => {
           : "N/A",
       },
       { key: "Farmer Type", value: farmerTypeLabel(data?.type) },
+      { key: "Refugee", value: data?.is_refugee ? "Yes" : "No" },
       { key: "ID Type", value: normalizeIdType(data?.id_type) || "N/A" },
       { key: "ID Number", value: data?.id_number || "N/A" },
       {

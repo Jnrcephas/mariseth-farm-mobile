@@ -252,6 +252,16 @@ const AddFarmerForm: React.FC<AddFarmerFormProps> = ({
             })
           : null}
 
+        {/* Asked for every farmer type (smallholder and commercial share this
+            form). Defaults to No, so there's no asterisk and it never blocks
+            submitting. */}
+        <YesNoSelector
+          label="Is the farmer a refugee?"
+          value={v.is_refugee === true}
+          required={false}
+          onChange={(value) => formik.setFieldValue("is_refugee", value)}
+        />
+
         <RegionSelector
           label="Region"
           placeholder="Select region"
