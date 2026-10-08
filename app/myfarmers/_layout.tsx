@@ -29,6 +29,21 @@ export default function MyFarmersLayout() {
       />
 
       <Stack.Screen
+        name="farmdetails"
+        options={({ route }: any) => {
+          // Title the screen with the farm's name (the farmer-name title above
+          // is built from first/last name, which a farm doesn't have).
+          let farmName = "";
+          try {
+            farmName = dataDecoder(route?.params?.data)?.name ?? "";
+          } catch {
+            /* fall back to the generic title */
+          }
+          return headerHandler(farmName || "Farm Details");
+        }}
+      />
+
+      <Stack.Screen
         name="addfarmer"
         options={addFarmerHeaderHandler()}
       />

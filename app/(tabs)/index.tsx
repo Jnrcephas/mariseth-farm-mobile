@@ -205,6 +205,7 @@ const Index = () => {
           >
             <QuickActionButton type="credit" width="47%" />
             {isLeaderFarmer ? <QuickActionButton type="farmer" width="47%" /> : null}
+            {isLeaderFarmer ? <QuickActionButton type="farm" width="47%" /> : null}
             <QuickActionButton type="market" width="47%" />
           </View>
         </View>

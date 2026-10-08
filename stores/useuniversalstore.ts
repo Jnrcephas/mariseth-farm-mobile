@@ -11,6 +11,7 @@ export const useUniversalStore = create<universalStore>((set, get) => ({
 
   selectedSegmentedOption: {
     myFarm: "Farm Details",
+    farmDetails: "Farm Details",
     myFarmers: "Farmers",
     myFarmerDetails: "Personal",
   },

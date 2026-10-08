@@ -1,8 +1,9 @@
 import { colors } from "@/constants/colors";
-import { getColorForItem } from "@/utils/commonmethods";
+import { dataEncoder, getColorForItem } from "@/utils/commonmethods";
+import { router } from "expo-router";
 import { differenceInDays, parseISO } from "date-fns";
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import AppText from "./apptext";
 import InitialsAvatar from "./initialsavatar";
 
@@ -10,12 +11,15 @@ interface farmCard {
   item?: any;
   variant?: "full" | "compact";
   showNewBadge?: boolean;
+  /** Defaults to opening this farm's details screen. */
+  onPress?: () => void;
 }
 
 const FarmCard: React.FC<farmCard> = ({
   item,
   variant = "full",
   showNewBadge,
+  onPress,
 }) => {
   const dateCreated = item?.date_created;
   const isLessThanTwoWeeks =
@@ -30,8 +34,17 @@ const FarmCard: React.FC<farmCard> = ({
     item?.region?.name ?? null,
   ].filter(Boolean);
 
+  const handlePress = () => {
+    if (onPress) {
+      onPress();
+      return;
+    }
+    if (!item?.id) return;
+    router.navigate(`/myfarmers/farmdetails?data=${dataEncoder(item)}`);
+  };
+
   return (
-    <View style={styles.farmCardContainer}>
+    <Pressable style={styles.farmCardContainer} onPress={handlePress}>
       <InitialsAvatar
         name={item?.name ?? ""}
         containerSize={40}
@@ -102,7 +115,7 @@ const FarmCard: React.FC<farmCard> = ({
           </AppText>
         </View>
       ) : null}
-    </View>
+    </Pressable>
   );
 };
 

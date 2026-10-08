@@ -8,6 +8,7 @@ import { handleGenericApiError } from "@/utils/apierrorhandler";
 import { dataDecoder, handleToastShow } from "@/utils/commonmethods";
 import { getAddFarmSource, getFarmerListSource } from "@/utils/farmdatasource";
 import { buildFarmPayload } from "@/utils/farmform";
+import { hasSelfIntersection } from "@/utils/geometry";
 import { joinFullName } from "@/utils/farmerhelpers";
 import { isFieldOfficerExperience } from "@/utils/userroles";
 import { getAddFarmSchema } from "@/utils/validationschema";
@@ -121,6 +122,13 @@ const AddFarm = () => {
         handleToastShow(
           toast,
           "Add at least 3 points to complete the boundary, or clear them to skip it for now."
+        );
+        return;
+      }
+      if (hasSelfIntersection(boundaryPoints)) {
+        handleToastShow(
+          toast,
+          "The farm boundary crosses over itself. Adjust the corners so the outline doesn't cross, then save again."
         );
         return;
       }

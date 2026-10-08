@@ -8,6 +8,7 @@ import { myFarm1 } from "@/types/farm";
 import { handleAuthApiError, handleGenericApiError } from "@/utils/apierrorhandler";
 import { dataDecoder, handleToastShow } from "@/utils/commonmethods";
 import { adddFarmerSchema } from "@/utils/validationschema";
+import { hasSelfIntersection } from "@/utils/geometry";
 import { buildFarmPayload, normalizeLandOwnership } from "@/utils/farmform";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
@@ -129,6 +130,13 @@ const EditFarmDetails = () => {
         handleToastShow(
           toast,
           "Add at least 3 points to complete the boundary, or clear them to skip it for now."
+        );
+        return;
+      }
+      if (hasSelfIntersection(boundaryPoints)) {
+        handleToastShow(
+          toast,
+          "The farm boundary crosses over itself. Adjust the corners so the outline doesn't cross, then save again."
         );
         return;
       }
