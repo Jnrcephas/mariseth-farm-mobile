@@ -162,3 +162,124 @@ export async function getFreshPosition(): Promise<FreshFix> {
       .catch(() => finish(null, new LocationError("UNKNOWN")));
   });
 }
+
+/**
+ * A quick, "good enough" position for centring a map on the person - not for
+ * marking a boundary corner. Same permission / services checks as
+ * `getFreshPosition`, but returns after one reading instead of waiting for a
+ * high-accuracy fix, so the map moves right away. Use `getFreshPosition`
+ * whenever the coordinates will be saved.
+ */
+export async function getQuickPosition(): Promise<FreshFix> {
+  await ensureLocationReady();
+  try {
+    const fix = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
+    return {
+      latitude: fix.coords.latitude,
+      longitude: fix.coords.longitude,
+      accuracy: fix.coords.accuracy ?? null,
+    };
+  } catch {
+    throw new LocationError("UNKNOWN");
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Live location (a continuous feed, like a "GPS status" app)
+// ---------------------------------------------------------------------------
+
+export type LiveFix = FreshFix & {
+  /** When the phone took this reading (ms since 1970). */
+  timestamp: number;
+};
+
+/**
+ * A live reading older than this is treated as stale (the feed may have
+ * stalled), so marking a point falls back to asking for a fresh one.
+ */
+export const LIVE_FIX_MAX_AGE_MS = 10000;
+
+export type SignalLevel = "good" | "fair" | "weak" | "unknown";
+
+/**
+ * Turns the accuracy number (metres of possible error - smaller is better)
+ * into a simple traffic light, using the same two thresholds as marking:
+ *   <= TARGET_ACCURACY_M  -> good   (15 m or better)
+ *   <= POOR_ACCURACY_M    -> fair   (16-30 m)
+ *   >  POOR_ACCURACY_M    -> weak   (more than 30 m)
+ */
+export function getSignalLevel(accuracy: number | null | undefined): SignalLevel {
+  if (accuracy == null || Number.isNaN(accuracy)) return "unknown";
+  if (accuracy <= TARGET_ACCURACY_M) return "good";
+  if (accuracy <= POOR_ACCURACY_M) return "fair";
+  return "weak";
+}
+
+/**
+ * Starts a continuous GPS feed and calls `onFix` about once a second until
+ * the returned function is called. Unlike `getFreshPosition` this never
+ * settles on one reading - it is for showing the person where they are *right
+ * now* as they walk.
+ *
+ * `silent: true` never asks for permission or pops a system dialog: it only
+ * starts if location is already allowed, otherwise it throws. Use it to start
+ * automatically when a screen opens; use the default for a button the person
+ * pressed themselves.
+ */
+export async function startLiveLocation(
+  onFix: (fix: LiveFix) => void,
+  options: { silent?: boolean } = {}
+): Promise<() => void> {
+  if (options.silent) {
+    const permission = await Location.getForegroundPermissionsAsync();
+    if (permission.status !== "granted") {
+      throw new LocationError("PERMISSION_DENIED");
+    }
+    if (Platform.OS === "android" && permission.android?.accuracy === "coarse") {
+      throw new LocationError("APPROXIMATE_ONLY");
+    }
+    if (!(await Location.hasServicesEnabledAsync())) {
+      throw new LocationError("SERVICES_OFF");
+    }
+  } else {
+    await ensureLocationReady();
+  }
+
+  try {
+    const subscription = await Location.watchPositionAsync(
+      {
+        accuracy: Location.Accuracy.Highest,
+        timeInterval: 1000,
+        distanceInterval: 0,
+      },
+      (location) => {
+        onFix({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          accuracy: location.coords.accuracy ?? null,
+          timestamp: location.timestamp,
+        });
+      }
+    );
+    return () => subscription.remove();
+  } catch {
+    throw new LocationError("UNKNOWN");
+  }
+}
+
+/**
+ * The live reading as a plain fix, but only if it is recent enough to trust.
+ * Returns null when there is no live feed or it has gone quiet - the caller
+ * should then fall back to `getFreshPosition`.
+ */
+export function usableLiveFix(live?: LiveFix | null): FreshFix | null {
+  if (!live) return null;
+  if (Date.now() - live.timestamp > LIVE_FIX_MAX_AGE_MS) return null;
+  return {
+    latitude: live.latitude,
+    longitude: live.longitude,
+    accuracy: live.accuracy,
+  };
+}

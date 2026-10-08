@@ -18,7 +18,9 @@ import RegionSelector from "./regionselector";
 import Select from "./select";
 import SelectModal from "./selectmodal";
 import SmallFarmerCard from "./smallfarmercard";
-import FarmBoundaryCapture, { BoundaryPoint } from "./farmboundarycapture";
+import { BoundaryPoint } from "./farmboundarycapture";
+import FarmBoundaryEditor from "./farmboundaryeditor";
+import { sqMetresToAcres, sqMetresToHectares } from "@/utils/geometry";
 import RemoteSelector from "./remoteselector";
 import { endpoints } from "@/constants/endpoints";
 import {
@@ -71,6 +73,36 @@ const FarmForm: React.FC<farmFormProps> = ({
   const sizeMetrics = metrics.filter(
     (metric) => metric.category_name === "size_metric"
   );
+
+  // "Use mapped area as farm size": converts the drawn boundary's area into
+  // whichever size unit (hectares / acres) the farm already uses, falling back
+  // to hectares then acres. Returns a message for the boundary editor to show,
+  // or null if no hectare/acre metric exists to apply it to.
+  const handleUseMappedArea = (areaSqMetres: number): string | null => {
+    const unitOf = (name?: string) => {
+      const n = String(name ?? "").trim().toLowerCase();
+      if (n.includes("acre")) return "acre";
+      if (n.includes("hectare") || /^ha\b/.test(n)) return "hectare";
+      return null;
+    };
+    const current = sizeMetrics.find(
+      (metric) => metric.id === formik.values.size_metric
+    );
+    const metric =
+      (unitOf(current?.name) ? current : undefined) ??
+      sizeMetrics.find((m) => unitOf(m.name) === "hectare") ??
+      sizeMetrics.find((m) => unitOf(m.name) === "acre");
+    if (!metric) return null;
+
+    const value =
+      unitOf(metric.name) === "acre"
+        ? sqMetresToAcres(areaSqMetres)
+        : sqMetresToHectares(areaSqMetres);
+    const rounded = Math.round(value * 100) / 100;
+    formik.setFieldValue("size_metric", metric.id);
+    formik.setFieldValue("size", String(rounded));
+    return `Farm size set to ${rounded} ${metric.name}.`;
+  };
   const cropProducts = farmProducts.filter(
     (product) => product.type === "crop"
   );
@@ -439,11 +471,12 @@ const FarmForm: React.FC<farmFormProps> = ({
           >
             Used for geofencing and asset tracking. Not required for weather or soil data.
           </AppText>
-          <FarmBoundaryCapture
+          <FarmBoundaryEditor
             points={formik.values.boundary ?? []}
             onChange={(points: BoundaryPoint[]) =>
               formik.setFieldValue("boundary", points)
             }
+            onUseArea={handleUseMappedArea}
           />
         </View>
 

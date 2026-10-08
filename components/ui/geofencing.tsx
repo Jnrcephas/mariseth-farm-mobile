@@ -30,15 +30,26 @@ import BoundaryMapView from "../boundarymapview";
 // below reflects real state again.
 interface GeofencingProps {
   farm?: myFarm;
+  /** See FarmDetails: override who sees Edit, and where it goes. */
+  canEdit?: boolean;
+  onEdit?: () => void;
 }
 
-const Geofencing: React.FC<GeofencingProps> = ({ farm }) => {
+const Geofencing: React.FC<GeofencingProps> = ({
+  farm,
+  canEdit: canEditProp,
+  onEdit,
+}) => {
   const user = userStore((state) => state.user);
-  const canEdit = canEditOwnFarm(user);
+  const canEdit = canEditProp ?? canEditOwnFarm(user);
 
   const hasBoundary = hasValidBoundary(farm?.boundary);
 
   const handleManageBoundary = () => {
+    if (onEdit) {
+      onEdit();
+      return;
+    }
     // editfarmdetails reads the farm off the `data` route param (see
     // farmdetails.tsx's own "Edit" button for the same pattern) - it
     // doesn't fetch its own copy. Navigating here without it used to

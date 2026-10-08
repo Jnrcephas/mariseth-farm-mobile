@@ -11,6 +11,13 @@ import InfoCard from "./infocard";
 import SectionHeader from "./sectionheader";
 interface farmDetailsProps {
   item: myFarm;
+  /**
+   * Override who sees the Edit button. By default only the signed-in farmer
+   * editing their own farm does (see canEditOwnFarm). The farm details screen
+   * a lead farmer opens from the Farms list passes its own rule and target.
+   */
+  canEdit?: boolean;
+  onEdit?: () => void;
 }
 const emptyValue = "-";
 
@@ -19,9 +26,10 @@ const displayValue = (value?: string | number | null) => {
   return String(value);
 };
 
-const FarmDetails: React.FC<farmDetailsProps> = React.memo(({ item }) => {
+const FarmDetails: React.FC<farmDetailsProps> = React.memo(
+  ({ item, canEdit: canEditProp, onEdit }) => {
   const user = userStore((state) => state.user);
-  const canEdit = canEditOwnFarm(user);
+  const canEdit = canEditProp ?? canEditOwnFarm(user);
   const farmingMethods = Array.isArray(item?.farming_methods)
     ? item?.farming_methods?.map((method: any) => method).join(", ") || emptyValue
     : emptyValue;
@@ -117,10 +125,12 @@ const FarmDetails: React.FC<farmDetailsProps> = React.memo(({ item }) => {
         dualEdit={canEdit}
         {...(canEdit
           ? {
-              onPress: () =>
-                router.navigate(
-                  `/myfarm/editfarmdetails?data=${dataEncoder(item)}`
-                ),
+              onPress:
+                onEdit ??
+                (() =>
+                  router.navigate(
+                    `/myfarm/editfarmdetails?data=${dataEncoder(item)}`
+                  )),
             }
           : {})}
       />
@@ -133,7 +143,8 @@ const FarmDetails: React.FC<farmDetailsProps> = React.memo(({ item }) => {
       <InfoCard headerVisibility={true} info={agriculturalDetails} />
     </View>
   );
-});
+  }
+);
 
 export default FarmDetails;
 

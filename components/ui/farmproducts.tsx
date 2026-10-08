@@ -12,13 +12,24 @@ import SectionHeader from "./sectionheader";
 
 interface farmProductsProps {
   products: myFarm;
+  /** See FarmDetails: override who sees Edit, and where it goes. */
+  canEdit?: boolean;
+  onEdit?: () => void;
 }
 
-const FarmProducts: React.FC<farmProductsProps> = ({ products }) => {
+const FarmProducts: React.FC<farmProductsProps> = ({
+  products,
+  canEdit: canEditProp,
+  onEdit,
+}) => {
   const user = userStore((state) => state.user);
-  const canEdit = canEditOwnFarm(user);
+  const canEdit = canEditProp ?? canEditOwnFarm(user);
 
   const handleEdit = () => {
+    if (onEdit) {
+      onEdit();
+      return;
+    }
     if (!products) return;
     router.navigate(
       `/myfarm/editfarmdetails?data=${dataEncoder(products)}`

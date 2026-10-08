@@ -2,6 +2,11 @@ import { smallHolder } from "./farmers";
 
 export type SegmentedControlState = {
   myFarm: "Farm Details" | "Farm Products" | "Soil & Air Quality" | "Geofencing";
+  farmDetails:
+    | "Farm Details"
+    | "Farm Products"
+    | "Soil & Air Quality"
+    | "Geofencing";
   myFarmers: "Farmers" | "Farms" | "Requests";
   myFarmerDetails: "Personal" | "Farm";
 };

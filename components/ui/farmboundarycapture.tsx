@@ -3,13 +3,16 @@ import { Linking, Pressable, StyleSheet, TextInput, View } from "react-native";
 import { Image } from "expo-image";
 import AppButton from "./appbutton";
 import AppText from "./apptext";
+import AccuracyHint from "./accuracyhint";
 import { colors } from "@/constants/colors";
 import { icons } from "@/constants/icons";
 import {
   distanceInMetres,
   getFreshPosition,
   getLocationErrorCode,
+  LiveFix,
   POOR_ACCURACY_M,
+  usableLiveFix,
 } from "@/utils/location";
 
 export type BoundaryPoint = {
@@ -23,7 +26,7 @@ export type BoundaryPoint = {
 // person it looks like they haven't moved.
 const SAME_SPOT_METRES = 3;
 
-const LOCATION_ERROR_MESSAGES: Record<string, string> = {
+export const LOCATION_ERROR_MESSAGES: Record<string, string> = {
   PERMISSION_DENIED:
     "Location permission is needed to mark boundary points. Enable it in your phone's settings.",
   APPROXIMATE_ONLY:
@@ -97,9 +100,16 @@ function parseBulkCoordinates(text: string): BoundaryPoint[] {
 const FarmBoundaryCapture = ({
   points,
   onChange,
+  liveFix,
 }: {
   points: BoundaryPoint[];
   onChange: (points: BoundaryPoint[]) => void;
+  /**
+   * The latest reading from the live GPS feed, when it is running. If it is
+   * recent, "Mark this point" uses it straight away instead of waiting up to
+   * 20 seconds for a fresh one.
+   */
+  liveFix?: LiveFix | null;
 }) => {
   const [isCapturing, setIsCapturing] = useState(false);
   const [permissionError, setPermissionError] = useState<string | null>(null);
@@ -115,8 +125,10 @@ const FarmBoundaryCapture = ({
     setNotice(null);
     setIsCapturing(true);
     try {
-      // Live GPS reading (not a cached one) - see utils/location.ts for why.
-      const fix = await getFreshPosition();
+      // Prefer the live feed's current reading (instant, and it is what the
+      // person is looking at on screen). Otherwise take a fresh, non-cached
+      // reading - see utils/location.ts for why.
+      const fix = usableLiveFix(liveFix) ?? (await getFreshPosition());
       const newPoint: BoundaryPoint = {
         latitude: fix.latitude,
         longitude: fix.longitude,
@@ -199,7 +211,8 @@ const FarmBoundaryCapture = ({
       {points.length > 0 ? (
         <View style={styles.pointsList}>
           {points.map((pt, index) => (
-            <View key={index} style={styles.pointRow}>
+            <View key={index}>
+            <View style={styles.pointRow}>
               <View style={styles.pointBadge}>
                 <AppText fontFamily="SemiBold" fontSize={12} color="white">
                   {index + 1}
@@ -222,6 +235,14 @@ const FarmBoundaryCapture = ({
               <Pressable onPress={() => handleRemovePoint(index)} hitSlop={8}>
                 <Image source={icons.close} style={{ width: 14, height: 14 }} />
               </Pressable>
+            </View>
+            {pt.accuracy != null ? (
+              // Only GPS-marked points carry an accuracy; typed or pasted
+              // ones don't, and show nothing here.
+              <View style={{ marginLeft: 30, marginTop: 3 }}>
+                <AccuracyHint accuracy={pt.accuracy} prefix="Marked" />
+              </View>
+            ) : null}
             </View>
           ))}
         </View>
@@ -282,6 +303,10 @@ const FarmBoundaryCapture = ({
           />
         ) : null}
       </View>
+      <AccuracyHint
+        accuracy={usableLiveFix(liveFix)?.accuracy}
+        prefix="GPS right now"
+      />
 
       <View style={{ flexDirection: "row", gap: 10 }}>
         <AppButton
