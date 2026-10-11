@@ -393,13 +393,6 @@ const AddFarmerForm: React.FC<AddFarmerFormProps> = ({
           keyboardType: "number-pad",
         })}
 
-        <CheckboxField
-          label="The farmer has given consent for their data to be collected and used."
-          value={v.consent === true}
-          onChange={(value) => formik.setFieldValue("consent", value)}
-          disabled={isLoading}
-        />
-
         <SectionHeader title="Support & Assistance" marginTop={8} />
 
         <YesNoSelector
@@ -421,6 +414,14 @@ const AddFarmerForm: React.FC<AddFarmerFormProps> = ({
           formik={formik}
           required={false}
         />
+
+         <CheckboxField
+          label="The farmer has given consent for their data to be collected and used."
+          value={v.consent === true}
+          onChange={(value) => formik.setFieldValue("consent", value)}
+          disabled={isLoading}
+        />
+        
       </KeyboardAwareScrollView>
 
       <View style={[styles.footer, { paddingBottom: bottomInset + 23 }]}>
