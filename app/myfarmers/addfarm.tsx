@@ -9,6 +9,7 @@ import { dataDecoder, handleToastShow } from "@/utils/commonmethods";
 import { getAddFarmSource, getFarmerListSource } from "@/utils/farmdatasource";
 import { buildFarmPayload } from "@/utils/farmform";
 import { hasSelfIntersection } from "@/utils/geometry";
+import { boundaryDraftKey, clearBoundaryDraft } from "@/utils/boundarydraft";
 import { joinFullName } from "@/utils/farmerhelpers";
 import { isFieldOfficerExperience } from "@/utils/userroles";
 import { getAddFarmSchema } from "@/utils/validationschema";
@@ -63,6 +64,9 @@ const AddFarm = () => {
     "addfarm",
     {
       onSuccess: () => {
+        // The farm (and its boundary) is saved, so the phone's backup of the
+        // unsaved points is no longer needed.
+        clearBoundaryDraft(boundaryDraftKey());
         handleToastShow(toast, "Farm has been added successfully!");
         queryClient
           .invalidateQueries({ queryKey: [farmQueryKey] })
@@ -165,6 +169,7 @@ const AddFarm = () => {
       isFieldOfficer={isFieldOfficer}
       recentlyAddedFarmers={recentlyAddedFarmers}
       webFormat={isFieldOfficer}
+      draftKey={boundaryDraftKey()}
     />
   );
 };
