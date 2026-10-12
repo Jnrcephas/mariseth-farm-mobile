@@ -115,3 +115,36 @@ export function formatNumber(value: number): string {
   if (value < 0.01) return "<0.01";
   return String(Math.round(value * 100) / 100);
 }
+
+export const hectaresToSqMetres = (hectares: number) =>
+  hectares * SQ_M_PER_HECTARE;
+export const acresToSqMetres = (acres: number) => acres * SQ_M_PER_ACRE;
+
+/**
+ * A square centred on `center` whose area equals `areaSqMetres`, north-up,
+ * returned as 4 corners (NW, NE, SE, SW). Used by the single-point "farm
+ * centre" option: the real shape of the farm is unknown, so this is only an
+ * approximation of its size and position.
+ */
+export function squareAroundPoint(
+  center: LatLng,
+  areaSqMetres: number
+): LatLng[] {
+  const halfSide = Math.sqrt(areaSqMetres) / 2;
+  const radToDeg = 180 / Math.PI;
+  const dLat = (halfSide / EARTH_RADIUS_M) * radToDeg;
+  const dLng =
+    (halfSide / (EARTH_RADIUS_M * Math.cos(toRad(center.latitude)))) * radToDeg;
+
+  const north = center.latitude + dLat;
+  const south = center.latitude - dLat;
+  const east = center.longitude + dLng;
+  const west = center.longitude - dLng;
+
+  return [
+    { latitude: north, longitude: west },
+    { latitude: north, longitude: east },
+    { latitude: south, longitude: east },
+    { latitude: south, longitude: west },
+  ];
+}

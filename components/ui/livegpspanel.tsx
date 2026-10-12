@@ -142,8 +142,24 @@ const LiveGpsPanel = ({ live }: { live: LiveLocation }) => {
         ) : null}
       </View>
 
-      <Row label="Latitude" value={fix.latitude.toFixed(6)} />
-      <Row label="Longitude" value={fix.longitude.toFixed(6)} />
+      <View style={styles.coordsRow}>
+        <View style={{ flex: 1 }}>
+          <AppText fontFamily="Regular" fontSize={12} color="formPlaceholderText">
+            Latitude
+          </AppText>
+          <AppText fontFamily="SemiBold" fontSize={14} color="textBold">
+            {fix.latitude.toFixed(6)}
+          </AppText>
+        </View>
+        <View style={{ flex: 1 }}>
+          <AppText fontFamily="Regular" fontSize={12} color="formPlaceholderText">
+            Longitude
+          </AppText>
+          <AppText fontFamily="SemiBold" fontSize={14} color="textBold">
+            {fix.longitude.toFixed(6)}
+          </AppText>
+        </View>
+      </View>
       <Row
         label="Accuracy"
         value={
@@ -191,6 +207,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  coordsRow: {
+    flexDirection: "row",
+    gap: 12,
   },
   button: {
     height: 38,

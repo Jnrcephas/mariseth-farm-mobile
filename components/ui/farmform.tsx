@@ -20,7 +20,12 @@ import SelectModal from "./selectmodal";
 import SmallFarmerCard from "./smallfarmercard";
 import { BoundaryPoint } from "./farmboundarycapture";
 import FarmBoundaryEditor from "./farmboundaryeditor";
-import { sqMetresToAcres, sqMetresToHectares } from "@/utils/geometry";
+import {
+  acresToSqMetres,
+  hectaresToSqMetres,
+  sqMetresToAcres,
+  sqMetresToHectares,
+} from "@/utils/geometry";
 import RemoteSelector from "./remoteselector";
 import { endpoints } from "@/constants/endpoints";
 import {
@@ -43,6 +48,9 @@ interface farmFormProps {
    * True for field officers adding and for every edit; false keeps the
    * lead-farmer add flow exactly as it was. */
   webFormat?: boolean;
+  /** Where the boundary points are backed up on the phone while editing
+   * (see utils/boundarydraft.ts). */
+  draftKey?: string;
 }
 
 const FarmForm: React.FC<farmFormProps> = ({
@@ -54,6 +62,7 @@ const FarmForm: React.FC<farmFormProps> = ({
   isFieldOfficer = false,
   recentlyAddedFarmers = [],
   webFormat = false,
+  draftKey,
 }) => {
   const bottomInset = useSafeAreaInsets().bottom;
   const isAddMode = type === "add";
@@ -78,13 +87,28 @@ const FarmForm: React.FC<farmFormProps> = ({
   // whichever size unit (hectares / acres) the farm already uses, falling back
   // to hectares then acres. Returns a message for the boundary editor to show,
   // or null if no hectare/acre metric exists to apply it to.
+  const unitOf = (name?: string) => {
+    const n = String(name ?? "").trim().toLowerCase();
+    if (n.includes("acre")) return "acre";
+    if (n.includes("hectare") || /^ha\b/.test(n)) return "hectare";
+    return null;
+  };
+
+  // The size typed on the form, converted to square metres, so the boundary
+  // section's "Farm centre" mode can draw a farm of that size around a point.
+  // Null until a number and a hectare/acre unit are both set.
+  const sizeValue = parseFloat(String(formik.values.size ?? "").replace(",", "."));
+  const sizeUnit = unitOf(
+    sizeMetrics.find((metric) => metric.id === formik.values.size_metric)?.name
+  );
+  const farmSizeSqMetres =
+    Number.isFinite(sizeValue) && sizeValue > 0 && sizeUnit
+      ? sizeUnit === "acre"
+        ? acresToSqMetres(sizeValue)
+        : hectaresToSqMetres(sizeValue)
+      : null;
+
   const handleUseMappedArea = (areaSqMetres: number): string | null => {
-    const unitOf = (name?: string) => {
-      const n = String(name ?? "").trim().toLowerCase();
-      if (n.includes("acre")) return "acre";
-      if (n.includes("hectare") || /^ha\b/.test(n)) return "hectare";
-      return null;
-    };
     const current = sizeMetrics.find(
       (metric) => metric.id === formik.values.size_metric
     );
@@ -477,6 +501,8 @@ const FarmForm: React.FC<farmFormProps> = ({
               formik.setFieldValue("boundary", points)
             }
             onUseArea={handleUseMappedArea}
+            farmSizeSqMetres={farmSizeSqMetres}
+            draftKey={draftKey}
           />
         </View>
 

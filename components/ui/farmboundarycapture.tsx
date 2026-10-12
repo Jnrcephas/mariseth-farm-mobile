@@ -205,8 +205,68 @@ const FarmBoundaryCapture = ({
   return (
     <View style={{ gap: 10 }}>
       <AppText fontFamily="Regular" fontSize={12} color="formPlaceholderText">
-        Walk to each corner of the farm and tap &quot;Mark this point&quot; while standing there, or enter coordinates directly below if you already have them. Mark at least 3 points. Farms need a boundary set to receive weather data.
+        Walk to each corner of the farm and tap &quot;Mark this point&quot; while standing there. Mark at least 3 points. You can also enter coordinates yourself below.
       </AppText>
+
+      <View style={{ flexDirection: "row", gap: 10 }}>
+        <AppButton
+          title="Mark this point"
+          textColor="white"
+          btnColor="buttonPrimary"
+          height={44}
+          fontSize={14}
+          style={{ flex: 1 }}
+          disabled={isCapturing}
+          loading={isCapturing}
+          onPress={handleMarkPoint}
+        />
+        {points.length > 0 ? (
+          <AppButton
+            title="Undo"
+            textColor="textBold"
+            btnColor="backgroundPrimary"
+            borderWidth={1}
+            borderColor="light"
+            height={44}
+            fontSize={14}
+            onPress={() => {
+              setNotice(null);
+              onChange(points.slice(0, -1));
+            }}
+          />
+        ) : null}
+      </View>
+      <AccuracyHint
+        accuracy={usableLiveFix(liveFix)?.accuracy}
+        prefix="GPS right now"
+      />
+
+      {permissionError ? (
+        <View style={{ gap: 6 }}>
+          <AppText fontFamily="Regular" fontSize={12} color="error">
+            {permissionError}
+          </AppText>
+          {needsSettings ? (
+            <Pressable onPress={() => Linking.openSettings()} hitSlop={8}>
+              <AppText fontFamily="SemiBold" fontSize={12} color="primary">
+                Open phone settings
+              </AppText>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
+
+      {isCapturing ? (
+        <AppText fontFamily="Regular" fontSize={12} color="formLabelText">
+          Getting a live GPS reading - stand still for a few seconds...
+        </AppText>
+      ) : null}
+
+      {notice ? (
+        <AppText fontFamily="Regular" fontSize={12} color="formLabelText">
+          {notice}
+        </AppText>
+      ) : null}
 
       {points.length > 0 ? (
         <View style={styles.pointsList}>
@@ -247,66 +307,6 @@ const FarmBoundaryCapture = ({
           ))}
         </View>
       ) : null}
-
-      {permissionError ? (
-        <View style={{ gap: 6 }}>
-          <AppText fontFamily="Regular" fontSize={12} color="error">
-            {permissionError}
-          </AppText>
-          {needsSettings ? (
-            <Pressable onPress={() => Linking.openSettings()} hitSlop={8}>
-              <AppText fontFamily="SemiBold" fontSize={12} color="primary">
-                Open phone settings
-              </AppText>
-            </Pressable>
-          ) : null}
-        </View>
-      ) : null}
-
-      {isCapturing ? (
-        <AppText fontFamily="Regular" fontSize={12} color="formLabelText">
-          Getting a live GPS reading - stand still for a few seconds...
-        </AppText>
-      ) : null}
-
-      {notice ? (
-        <AppText fontFamily="Regular" fontSize={12} color="formLabelText">
-          {notice}
-        </AppText>
-      ) : null}
-
-      <View style={{ flexDirection: "row", gap: 10 }}>
-        <AppButton
-          title="Mark this point"
-          textColor="white"
-          btnColor="buttonPrimary"
-          height={44}
-          fontSize={14}
-          style={{ flex: 1 }}
-          disabled={isCapturing}
-          loading={isCapturing}
-          onPress={handleMarkPoint}
-        />
-        {points.length > 0 ? (
-          <AppButton
-            title="Undo"
-            textColor="textBold"
-            btnColor="backgroundPrimary"
-            borderWidth={1}
-            borderColor="light"
-            height={44}
-            fontSize={14}
-            onPress={() => {
-              setNotice(null);
-              onChange(points.slice(0, -1));
-            }}
-          />
-        ) : null}
-      </View>
-      <AccuracyHint
-        accuracy={usableLiveFix(liveFix)?.accuracy}
-        prefix="GPS right now"
-      />
 
       <View style={{ flexDirection: "row", gap: 10 }}>
         <AppButton

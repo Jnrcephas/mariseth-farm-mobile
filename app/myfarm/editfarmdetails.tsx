@@ -9,6 +9,7 @@ import { handleAuthApiError, handleGenericApiError } from "@/utils/apierrorhandl
 import { dataDecoder, handleToastShow } from "@/utils/commonmethods";
 import { adddFarmerSchema } from "@/utils/validationschema";
 import { hasSelfIntersection } from "@/utils/geometry";
+import { boundaryDraftKey, clearBoundaryDraft } from "@/utils/boundarydraft";
 import { buildFarmPayload, normalizeLandOwnership } from "@/utils/farmform";
 import { useQueryClient } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
@@ -69,6 +70,8 @@ const EditFarmDetails = () => {
     {
       onSuccess: async (data) => {
         // console.log(JSON.stringify(data));
+        // Saved - the phone's backup of unsaved boundary points can go.
+        clearBoundaryDraft(boundaryDraftKey(farmData?.id));
         const toastMessage = "Farm details updated successfully!";
         handleToastShow(toast, toastMessage);
         await Promise.all(
@@ -183,6 +186,7 @@ const EditFarmDetails = () => {
       type="edit"
       districts={districts}
       webFormat
+      draftKey={boundaryDraftKey(farmData?.id)}
     />
   );
 };
